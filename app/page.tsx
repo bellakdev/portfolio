@@ -1137,6 +1137,10 @@ export default function Portfolio() {
               </div>
 
             </section>
+
+            <footer className="pt-8 pb-4 text-xs text-th-muted">
+              &copy; {new Date().getFullYear()} Bella Kim. All rights reserved.
+            </footer>
           </main>
         </div>
       </div>
