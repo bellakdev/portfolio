@@ -1,0 +1,179 @@
+%-------------------------
+% Bella Kim — Software / AI Engineering Resume
+% Upload to Overleaf: https://www.overleaf.com/
+%-------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{iftex}
+\ifpdftex\input{glyphtounicode}\fi
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\ifpdftex\pdfgentounicode=1\fi
+
+%----- Custom Commands -----%
+\newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+  \item
+  \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+    \small#1 & #2 \\
+  \end{tabular*}\vspace{-7pt}
+}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%==========================%
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+  {\Huge \scshape Bella Kim} \\ \vspace{4pt}
+  \small
+  Waterloo, ON \;$|$\;
+  \href{mailto:b37kim@uwaterloo.ca}{b37kim@uwaterloo.ca} \;$|$\;
+  \href{https://www.linkedin.com/in/gayeunbella/}{linkedin.com/in/gayeunbella} \;$|$\;
+  \href{https://github.com/gayeunbella}{github.com/gayeunbella}
+\end{center}
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {University of Waterloo}{Waterloo, ON}
+      {Bachelor of Applied Science, Computer Engineering}{Expected Apr. 2029}
+      \resumeItemListStart
+        \resumeItem{Relevant Courses: Algorithms \& Data Structures, Operating Systems, Computer Organization, Software Design \& Architectures}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+%-----------TECHNICAL SKILLS-----------
+\section{Technical Skills}
+  \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+      \textbf{Languages}{: Python, TypeScript, JavaScript, C++, SQL, Verilog, HTML/CSS} \\
+      \textbf{Frameworks \& Libraries}{: FastAPI, React, React Native, Next.js, Node.js, Flask, asyncio, aiosqlite, Pydantic, BeautifulSoup, httpx} \\
+      \textbf{AI \& Data}{: LLM APIs (Claude, OpenAI), prompt engineering, entity resolution, classification pipelines, async ETL} \\
+      \textbf{Tools}{: Git, SQLite, JWT, Google Cloud API, Vercel, Figma}
+    }}
+  \end{itemize}
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Graze.AI}{Remote}
+      {Software Engineering Co-op}{Jan. 2026 -- Apr. 2026}
+      \resumeItemListStart
+        \resumeItem{Architected an async \textbf{FastAPI} backend integrating LLM and web-scraping APIs, orchestrating 30+ concurrent HTTP requests via \texttt{asyncio.Semaphore} under strict token rate limits}
+        \resumeItem{Engineered a deterministic entity resolution algorithm using fuzzy stem matching, Levenshtein distances, and heuristic scoring to canonicalize unstructured search data to domains}
+        \resumeItem{Built an \textbf{LLM-driven classification pipeline} parsing natural language criteria into strict Pydantic schemas with deterministic fallbacks, achieving zero-hallucination structured output}
+        \resumeItem{Implemented a high-throughput \texttt{aiosqlite} caching layer with SHA-256 fingerprinting to deduplicate pipeline operations across large CSV datasets}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------
+\section{Projects}
+  \resumeSubHeadingListStart
+
+    \resumeProjectHeading
+      {\textbf{UW Eng Network} $|$ \emph{Python, FastAPI, Next.js, BeautifulSoup, SQLite, JWT, Claude Vision API}}{Mar. 2026}
+      \resumeItemListStart
+        \resumeItem{Built a full-stack social platform for UW Engineering featuring low-latency JWT auth and \textbf{Claude Vision API} for automated visual content verification}
+        \resumeItem{Engineered an async ETL pipeline (httpx, BeautifulSoup) scraping and loading 300+ nodes of unstructured faculty data into a scalable SQLite database}
+      \resumeItemListEnd
+
+    \resumeProjectHeading
+      {\textbf{Hase — Financial Tracker} $|$ \emph{TypeScript, React Native, SQL}}{Apr. 2026}
+      \resumeItemListStart
+        \resumeItem{Architected a highly concurrent mobile client aggregating and logging real-time income/expense streams with dynamic visualization}
+        \resumeItem{Engineered a centralized relational schema to securely parse, store, and retrieve digital wallet identifiers and loyalty point metrics across mobile ecosystems}
+      \resumeItemListEnd
+
+    \resumeProjectHeading
+      {\textbf{Plat AI} $|$ \emph{React, Node.js, OpenAI API} $|$ \emph{\textbf{2nd Place}, Flowboat Pitching Competition}}{Oct. 2023 -- Apr. 2024}
+      \resumeItemListStart
+        \resumeItem{Built a real-time pitch feedback engine achieving \textbf{95\% accuracy} on structured rubric scoring against a gold-standard evaluation dataset}
+        \resumeItem{Designed a Q\&A system that analyzes pitch topics to generate contextually relevant interview questions dynamically}
+      \resumeItemListEnd
+
+    \resumeProjectHeading
+      {\textbf{Thrift — Sustainability Chrome Extension} $|$ \emph{Python, Flask, JavaScript} $|$ \emph{\textbf{Best Sustainability Hack}, JAMHacks 6}}{May 2022}
+      \resumeItemListStart
+        \resumeItem{Accelerated product data scraping by \textbf{60\%} via a Flask backend; boosted relevant product match rate by \textbf{35\%} with improved heuristic scoring}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%-----------AWARDS-----------
+\section{Awards \& Recognition}
+  \begin{itemize}[leftmargin=0.15in, label={--}]
+    \small{
+      \item 2nd Place, Flowboat Pitching Competition (Plat AI, 2024)
+      \item Best User Design, Technovation Girls Waterloo Regional Pitch Event (Fluent Friends, 2024)
+      \item Best Use of DeSo, Give Back Hacks 3 (CharityChimp, 2022)
+      \item Best Sustainability Hack, JAMHacks 6 (Thrift, 2022)
+      \item Best Software Project, Highlander Engineering Challenge (FoodiEco, 2022)
+    }
+  \end{itemize}
+
+%-----------LEADERSHIP-----------
+\section{Leadership \& Activities}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {JAMHacks 9}{Waterloo, ON}
+      {Co-Lead Organizer}{Aug. 2024 -- Jun. 2025}
+      \resumeItemListStart
+        \resumeItem{Led 17 organizers to deliver a student hackathon; secured \textbf{\$10k+} in sponsorships and managed logistics for \textbf{200+ attendees}}
+      \resumeItemListEnd
+    \resumeSubheading
+      {UW AKCSE — Korean-Canadian Science \& Engineering}{Waterloo, ON}
+      {Events Coordinator}{Sep. 2025 -- Present}
+      \resumeItemListStart
+        \resumeItem{Plan and execute all chapter events, coordinating venues, logistics, and community outreach}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+\end{document}

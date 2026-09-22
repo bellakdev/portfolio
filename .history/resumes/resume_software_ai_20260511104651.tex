@@ -1,0 +1,187 @@
+%-------------------------
+% Resume in Latex
+% Author : Harshibar
+% Based off of: https://github.com/jakeryang/resume
+% License : MIT
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+
+% fontawesome
+\usepackage{fontawesome5}
+
+% fixed width
+\usepackage[scale=0.90,lf]{FiraMono}
+
+% light-grey
+\definecolor{light-grey}{gray}{0.83}
+\definecolor{dark-grey}{gray}{0.3}
+\definecolor{text-grey}{gray}{.08}
+
+\DeclareRobustCommand{\ebseries}{\fontseries{eb}\selectfont}
+\DeclareTextFontCommand{\texteb}{\ebseries}
+
+% custom underline
+\usepackage{contour}
+\usepackage[normalem]{ulem}
+\renewcommand{\ULdepth}{1.8pt}
+\contourlength{0.8pt}
+\newcommand{\myuline}[1]{%
+  \uline{\phantom{#1}}%
+  \llap{\contour{white}{#1}}%
+}
+
+% custom font: helvetica-style
+\usepackage{tgheros}
+\renewcommand*\familydefault{\sfdefault}
+\usepackage[T1]{fontenc}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.55in}
+\addtolength{\evensidemargin}{-0.55in}
+\addtolength{\textwidth}{1.1in}
+\addtolength{\topmargin}{-0.6in}
+\addtolength{\textheight}{1.2in}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% sans serif sections
+\titleformat{\section}{
+    \bfseries \vspace{2pt} \raggedright \large
+}{}{0em}{}[\color{light-grey}{\titlerule[2pt]} \vspace{-4pt}]
+
+%-------------------------
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-1pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-1pt}\item
+    \begin{tabular*}{\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & {\color{dark-grey}\small #2}\vspace{1pt}\\
+      \textit{#3} & {\color{dark-grey} \small #4}\\
+    \end{tabular*}\vspace{-4pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{\textwidth}{l@{\extracolsep{\fill}}r}
+      #1 & {\color{dark-grey}\small #2} \\
+    \end{tabular*}\vspace{-4pt}
+}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}[itemsep=2.5pt, parsep=0pt]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{0pt}}
+
+\color{text-grey}
+
+%-------------------------------------------
+%%%%%%  RESUME STARTS HERE  %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    \textbf{\Huge Bella Kim} \\ \vspace{6pt}
+    \small \faPhone* \texttt{+1 (519) 722-3297} \hspace{1pt} $|$
+    \hspace{1pt} \faEnvelope \hspace{2pt} \texttt{b37kim@uwaterloo.ca} \hspace{1pt} $|$
+    \hspace{1pt} \faGlobe \hspace{2pt} \texttt{gayeunbella.vercel.app} \\ \vspace{3pt}
+    \faGithub\hspace{2pt} \texttt{gayeunbella} \hspace{1pt} $|$
+    \hspace{1pt} \faLinkedin \hspace{2pt}\texttt{linkedin.com/in/gayeunbella}
+    \\ \vspace{-4pt}
+\end{center}
+
+%-----------EDUCATION-----------
+\section{EDUCATION}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {University of Waterloo}{Sep. 2025 -- Apr. 2030}
+      {Bachelor of Applied Science in Computer Engineering}{Waterloo, ON}
+      \resumeItemListStart
+        \resumeItem{\textbf{Relevant Coursework}: Classical Mechanics, Fundamentals of Programming, Digital Circuits \& Systems}
+        \resumeItem{\textbf{Awards}: President's Scholarship of Distinction}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+%-----------EXPERIENCE-----------
+\section{EXPERIENCE}
+  \resumeSubHeadingListStart
+
+    \resumeSubheading
+      {Graze AI}{Jan. 2026 -- Apr. 2026}
+      {Software Engineering Co-op}{Remote}
+      \resumeItemListStart
+        \resumeItem{\textbf{Architected an asynchronous FastAPI backend} integrating LLM and web-scraping APIs, utilizing \texttt{asyncio.Semaphore} to orchestrate 30+ concurrent HTTP requests while strictly managing token rate limits.}
+        \resumeItem{\textbf{Engineered a deterministic entity resolution algorithm} implementing fuzzy stem matching, Levenshtein edit distances, and custom heuristic scoring to accurately map unstructured search data to canonical domains.}
+        \resumeItem{\textbf{Developed an automated classification pipeline} using LLMs to parse natural language criteria into strict \texttt{Pydantic} schemas, with fallback deterministic logic to ensure zero-hallucination data mapping.}
+        \resumeItem{\textbf{Implemented a high-throughput caching layer} utilizing \texttt{aiosqlite} and SHA-256 fingerprinting, optimizing state management and deduplicating pipeline operations across large-scale CSV datasets.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------
+\section{PROJECTS}
+  \resumeSubHeadingListStart
+
+    \resumeProjectHeading
+      {\textbf{Autonomous Firefighter Bot} $|$ \emph{C++, TraxMaker, AutoCAD, Embedded Systems}}{Feb. 2025 -- Jun. 2025}
+      \resumeItemListStart
+        \resumeItem{\textbf{Engineered an autonomous real-time system} in C++ to process sensor telemetry, detect anomalies, and execute deterministic pathfinding algorithms within a complex physical maze environment.}
+        \resumeItem{Achieved the \textbf{fastest algorithm execution and physical completion time (9.8s)} among 50 competing robots.}
+        \resumeItem{\textbf{Designed and assembled 3 custom PCBs} using TraxMaker to minimize electrical interference, improving hardware-to-software signal reliability and overall system latency by 40\%.}
+      \resumeItemListEnd
+
+    \resumeProjectHeading
+      {\textbf{UW Eng Network} $|$ \emph{Python, FastAPI, SQLite, ETL, Asynchronous I/O}}{Mar. 2026}
+      \resumeItemListStart
+        \resumeItem{\textbf{Built a low-latency, full-stack architecture} integrating strict JWT authentication protocols and automated visual verification logic utilizing Claude's vision API endpoints.}
+        \resumeItem{\textbf{Engineered an async web scraping ETL pipeline} (\texttt{httpx}, BeautifulSoup) to extract, transform, and load 300+ nodes of unstructured faculty data into a scalable SQLite database.}
+      \resumeItemListEnd
+
+    \resumeProjectHeading
+      {\textbf{Hase} $|$ \emph{TypeScript, React Native, SQL}}{Apr. 2026 -- Present}
+      \resumeItemListStart
+        \resumeItem{\textbf{Architecting a highly concurrent financial tracking client} capable of aggregating and logging daily income and expense data streams with real-time dynamic visualization.}
+        \resumeItem{\textbf{Engineered a centralized relational database schema} to securely parse, store, and retrieve digital wallet identifiers and loyalty point metrics across mobile ecosystems.}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%-----------SKILLS-----------
+\section{SKILLS}
+  \begin{itemize}[leftmargin=0in, label={}]
+    \small{\item{
+      \textbf{Core Languages}{: C++, Python, Java, SQL, TypeScript, JavaScript}\vspace{2pt} \\
+      \textbf{Systems \& Hardware}{: Embedded Systems, FreeRTOS, Arduino, PCB Design, AutoCAD, TraxMaker}\vspace{2pt} \\
+      \textbf{Frameworks \& Tools}{: FastAPI, Flask, React, Next.js, Git, SQLite, Asynchronous I/O, ETL Pipelines, React Native}
+    }}
+  \end{itemize}
+
+%-------------------------------------------
+\end{document}

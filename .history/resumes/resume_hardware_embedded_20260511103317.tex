@@ -1,0 +1,178 @@
+%-------------------------
+% Bella Kim — Hardware / Embedded Systems Resume
+% Upload to Overleaf: https://www.overleaf.com/
+%-------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\pdfgentounicode=1
+
+%----- Custom Commands -----%
+\newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+  \item
+  \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+    \small#1 & #2 \\
+  \end{tabular*}\vspace{-7pt}
+}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+%==========================%
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+  {\Huge \scshape Bella Kim} \\ \vspace{4pt}
+  \small
+  Waterloo, ON \;$|$\;
+  \href{mailto:b37kim@uwaterloo.ca}{b37kim@uwaterloo.ca} \;$|$\;
+  \href{https://www.linkedin.com/in/gayeunbella/}{linkedin.com/in/gayeunbella} \;$|$\;
+  \href{https://github.com/gayeunbella}{github.com/gayeunbella}
+\end{center}
+
+%-----------EDUCATION-----------
+\section{Education}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {University of Waterloo}{Waterloo, ON}
+      {Bachelor of Applied Science, Computer Engineering}{Expected Apr. 2029}
+      \resumeItemListStart
+        \resumeItem{Relevant Courses: Digital Circuits \& Signals, Embedded Microprocessors, Computer Organization, Real-Time Operating Systems, Electronic Devices}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+%-----------TECHNICAL SKILLS-----------
+\section{Technical Skills}
+  \begin{itemize}[leftmargin=0.15in, label={}]
+    \small{\item{
+      \textbf{Languages}{: C++, Python, Verilog, TypeScript, JavaScript, SQL} \\
+      \textbf{Hardware \& Embedded}{: PCB Design (TraxMaker), AutoCAD, Onshape, FreeRTOS, Arduino, sensor integration, real-time control loops} \\
+      \textbf{Concepts}{: Deterministic pathfinding, interrupt-driven I/O, hardware-software co-design, concurrent systems, signal reliability} \\
+      \textbf{Software}{: FastAPI, asyncio, Git, SQLite, React, Next.js}
+    }}
+  \end{itemize}
+
+%-----------PROJECTS-----------
+\section{Projects}
+  \resumeSubHeadingListStart
+
+    \resumeProjectHeading
+      {\textbf{Autonomous Firefighter Robot} $|$ \emph{C++, TraxMaker PCB Design, AutoCAD, Onshape, Embedded Systems}}{Feb. -- Jun. 2025}
+      \resumeItemListStart
+        \resumeItem{Engineered a real-time \textbf{C++} control system processing multi-sensor telemetry, detecting fire anomalies, and executing deterministic pathfinding through a physical maze}
+        \resumeItem{Achieved the \textbf{fastest algorithm and physical completion time (9.8 s)} among 50 competing teams}
+        \resumeItem{Designed and assembled \textbf{3 custom PCBs} in TraxMaker, improving hardware-to-software signal reliability by \textbf{40\%}}
+        \resumeItem{Integrated motor control, IR sensors, and flame detectors under a unified real-time control loop with sub-millisecond response latency}
+      \resumeItemListEnd
+
+    \resumeProjectHeading
+      {\textbf{UW Eng Network} $|$ \emph{Python, FastAPI, httpx, BeautifulSoup, SQLite, Next.js}}{Mar. 2026}
+      \resumeItemListStart
+        \resumeItem{Engineered an async web-scraping ETL pipeline loading \textbf{300+ nodes} of structured faculty data into a normalized SQLite database with strict schema validation}
+        \resumeItem{Built a concurrent backend with rate-limiting, JWT-authenticated API routes, and automated visual verification via Claude's vision API}
+      \resumeItemListEnd
+
+    \resumeProjectHeading
+      {\textbf{Booke — Mobile Reader App} $|$ \emph{React Native, SQL, Google Cloud API}}{Apr. 2026}
+      \resumeItemListStart
+        \resumeItem{Built a cross-platform mobile and web application with a relational backend storing books and user data via Google Cloud APIs}
+      \resumeItemListEnd
+
+    \resumeProjectHeading
+      {\textbf{Thrift — Sustainability Chrome Extension} $|$ \emph{Python, Flask, JavaScript} $|$ \emph{\textbf{Best Sustainability Hack}, JAMHacks 6}}{May 2022}
+      \resumeItemListStart
+        \resumeItem{Accelerated product data scraping throughput by \textbf{60\%} via a Flask backend; boosted product match rate by \textbf{35\%} with custom heuristics}
+      \resumeItemListEnd
+
+  \resumeSubHeadingListEnd
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {Graze.AI}{Remote}
+      {Software Engineering Co-op}{Jan. 2026 -- Apr. 2026}
+      \resumeItemListStart
+        \resumeItem{Architected a concurrent FastAPI backend orchestrating \textbf{30+ simultaneous HTTP requests} with \texttt{asyncio.Semaphore} for precise rate-limit control}
+        \resumeItem{Implemented a deterministic entity resolution algorithm with fuzzy matching and multi-signal heuristic scoring to canonicalize unstructured data at scale}
+        \resumeItem{Built a high-throughput caching layer with SHA-256 fingerprinting to eliminate redundant pipeline operations across large CSV datasets}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+%-----------AWARDS-----------
+\section{Awards \& Recognition}
+  \begin{itemize}[leftmargin=0.15in, label={--}]
+    \small{
+      \item \textbf{Fastest Completion (9.8 s)} out of 50 teams, Autonomous Robot Competition (2025)
+      \item 2nd Place, Flowboat Pitching Competition (Plat AI, 2024)
+      \item Best User Design, Technovation Girls Waterloo Regional Pitch Event (Fluent Friends, 2024)
+      \item Best Sustainability Hack, JAMHacks 6 (Thrift, 2022)
+      \item Best Software Project, Highlander Engineering Challenge (FoodiEco, 2022)
+    }
+  \end{itemize}
+
+%-----------LEADERSHIP-----------
+\section{Leadership \& Activities}
+  \resumeSubHeadingListStart
+    \resumeSubheading
+      {JAMHacks 9}{Waterloo, ON}
+      {Co-Lead Organizer}{Aug. 2024 -- Jun. 2025}
+      \resumeItemListStart
+        \resumeItem{Led 17 organizers to deliver a student hackathon; secured \textbf{\$10k+} in sponsorships and managed logistics for \textbf{200+ attendees}}
+      \resumeItemListEnd
+    \resumeSubheading
+      {UW AKCSE — Korean-Canadian Science \& Engineering}{Waterloo, ON}
+      {Events Coordinator}{Sep. 2025 -- Present}
+      \resumeItemListStart
+        \resumeItem{Plan and execute all chapter events, coordinating venues, logistics, and community outreach}
+      \resumeItemListEnd
+  \resumeSubHeadingListEnd
+
+\end{document}
