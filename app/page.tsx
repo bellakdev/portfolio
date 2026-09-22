@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 export default function Portfolio() {
-  const [activeSection, setActiveSection] = useState('about');
+  const [activeSection, setActiveSection] = useState('Skills');
   const [openExtracurriculars, setOpenExtracurriculars] = useState<Record<string, boolean>>({ university: true, highschool: false });
   const [openProjectYears, setOpenProjectYears] = useState<Record<string, boolean>>({ '2026': true, '2025': false, '2024': false, '2023': false, '2022': false });
 
@@ -28,7 +28,7 @@ export default function Portfolio() {
   }, []);
 
   const navItems = [
-    { id: 'about', label: 'About' },
+    { id: 'skills', label: 'Skills' },
     { id: 'experience', label: 'Work Experience' },
     { id: 'extracurriculars', label: 'Extracurriculars', children: [
       { id: 'ec-university', label: 'University' },
@@ -186,7 +186,7 @@ export default function Portfolio() {
 
       {/* Mobile Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-th-glass backdrop-blur-sm border-b border-th-line px-4 py-3 lg:hidden">
-        <button onClick={() => { scrollTo('about'); }} className="text-lg font-bold text-th-heading tracking-tight">Bella Kim</button>
+        <button onClick={() => { scrollTo('skills'); }} className="text-lg font-bold text-th-heading tracking-tight">Bella Kim</button>
         <div className="flex items-center gap-3">
           <a href="mailto:b37kim@uwaterloo.ca" className="text-th-accent hover:text-th-heading transition">
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
@@ -414,11 +414,8 @@ export default function Portfolio() {
               </div>
             </div>
 
-            <section id="about" className="scroll-mt-16 lg:scroll-mt-24 text-th-prose leading-relaxed">
-              <h3 className="text-lg font-bold uppercase tracking-widest text-th-heading mb-6">About</h3>
-              <p className="mb-6">
-                Hi! I design and ship end-to-end systems spanning embedded hardware, PCB design, and full-stack web.
-              </p>
+            <section id="skills" className="scroll-mt-16 lg:scroll-mt-24 text-th-prose leading-relaxed">
+              <h3 className="text-lg font-bold uppercase tracking-widest text-th-heading mb-6">Skills</h3>
               <div className="space-y-4">
                 {[
                   { category: "Languages", skills: ["Python", "C++", "JavaScript", "TypeScript", "SQL", "Verilog", "HTML", "CSS"] },
