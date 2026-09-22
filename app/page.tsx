@@ -103,7 +103,7 @@ export default function Portfolio() {
   useEffect(() => {
     const el = cursorRef.current;
     if (!el) return;
-    if (window.matchMedia('(pointer: coarse)').matches) return;
+    if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
     const onMove = (e: MouseEvent) => {
       el.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
@@ -170,15 +170,14 @@ export default function Portfolio() {
   };
 
   return (
-    <div className={`text-th-body min-h-screen font-sans selection:bg-th-sel selection:text-th-sel-tx ${mobileMenuOpen ? 'overflow-hidden max-h-screen' : ''}`}>
+    <div className={`text-th-body min-h-screen font-mono selection:bg-th-sel selection:text-th-sel-tx ${mobileMenuOpen ? 'overflow-hidden max-h-screen' : ''}`}>
 
-      {/* Cursor-following glow — sits behind everything; elements with their own background cover it */}
+      {/* Custom cursor — mix-blend-difference inverts colors of whatever text/element it overlaps */}
       <div
         ref={cursorRef}
         aria-hidden="true"
-        className="pointer-events-none fixed left-0 top-0 -z-10 hidden h-[40rem] w-[40rem] rounded-full opacity-40 blur-2xl lg:block dark:opacity-30"
+        className="pointer-events-none fixed left-0 top-0 z-[999] hidden h-5 w-5 rounded-full bg-white mix-blend-difference lg:block"
         style={{
-          background: 'radial-gradient(circle, var(--th-dot) 0%, transparent 70%)',
           willChange: 'transform',
           transform: 'translate3d(50vw, 50vh, 0) translate(-50%, -50%)',
         }}
@@ -262,7 +261,7 @@ export default function Portfolio() {
         </div>
       )}
 
-      <div className="mx-auto min-h-screen max-w-7xl px-4 pt-16 pb-12 font-sans sm:px-6 md:px-12 md:py-20 lg:px-24 lg:py-0 lg:pt-0">
+      <div className="mx-auto min-h-screen max-w-7xl px-4 pt-16 pb-12 font-mono sm:px-6 md:px-12 md:py-20 lg:px-24 lg:py-0 lg:pt-0">
         <div className="lg:flex lg:justify-between lg:gap-0">
 
           {/* Left Sidebar (Sticky) — hidden on mobile */}
