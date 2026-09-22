@@ -98,7 +98,7 @@ export default function Portfolio() {
     applyAccent(color, theme);
   };
 
-  const cursorRef = useRef<HTMLDivElement | null>(null);
+  const cursorRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
     const el = cursorRef.current;
@@ -106,7 +106,7 @@ export default function Portfolio() {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
     const onMove = (e: MouseEvent) => {
-      el.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0) translate(-50%, -50%)`;
+      el.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
     };
 
     window.addEventListener('mousemove', onMove);
@@ -172,16 +172,20 @@ export default function Portfolio() {
   return (
     <div className={`text-th-body min-h-screen font-mono selection:bg-th-sel selection:text-th-sel-tx ${mobileMenuOpen ? 'overflow-hidden max-h-screen' : ''}`}>
 
-      {/* Custom cursor — mix-blend-difference inverts colors of whatever text/element it overlaps */}
-      <div
+      {/* Custom arrow cursor — mix-blend-difference inverts colors of whatever text/element it overlaps */}
+      <svg
         ref={cursorRef}
         aria-hidden="true"
-        className="pointer-events-none fixed left-0 top-0 z-[999] hidden h-5 w-5 rounded-full bg-white mix-blend-difference lg:block"
+        viewBox="0 0 24 24"
+        className="pointer-events-none fixed left-0 top-0 z-999 hidden h-5 w-5 mix-blend-difference lg:block"
         style={{
+          fill: 'var(--th-accent)',
           willChange: 'transform',
-          transform: 'translate3d(50vw, 50vh, 0) translate(-50%, -50%)',
+          transform: 'translate3d(50vw, 50vh, 0)',
         }}
-      />
+      >
+        <path d="M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z" />
+      </svg>
 
       {/* Mobile Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-th-glass backdrop-blur-sm border-b border-th-line px-4 py-3 lg:hidden">
