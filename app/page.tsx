@@ -537,7 +537,15 @@ export default function Portfolio() {
                         <div className="mt-3 space-y-3">
                           <div className="relative pl-4 border-l border-th-rule">
                             <div className="absolute -left-1 top-1 h-2 w-2 rounded-full bg-th-dot"></div>
+                            <p className="text-sm font-medium text-th-heading">Software Developer</p>
+                            <p className="text-xs text-th-muted">Sep 2026 — Present</p>
+                            <p className="mt-1 text-sm leading-normal text-th-prose">Design and develop an interactive 3D graph design for the Our Team page.</p>
+                            <p className="mt-1 text-sm leading-normal text-th-prose">Engineer Cupid's Algorithm, a dating website for AKCSE members across 4 universities in Canada.</p>
+                          </div>
+                          <div className="relative pl-4 border-l border-th-rule">
+                            <div className="absolute -left-1 top-1 h-2 w-2 rounded-full bg-th-dot"></div>
                             <p className="text-sm font-medium text-th-heading">Events Coordinator</p>
+                            <p className="text-xs text-th-muted">Sep 2025 — Dec 2026</p>
                             <p className="mt-1 text-sm leading-normal text-th-prose">Plan and execute all AKCSE events, coordinating logistics, venues, and outreach for the University of Waterloo chapter.</p>
                           </div>
                         </div>
@@ -606,14 +614,14 @@ export default function Portfolio() {
                     </div>
 
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
-                      <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Sep 2023 —<span className="hidden md:block"></span> Present</header>
+                      <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Sep 2023 —<span className="hidden md:block"></span>Jun 2025</header>
                       <div className="z-10 md:col-span-6">
                         <h3 className="font-medium leading-snug text-th-heading">SVP Teens · Social Venture Partners Waterloo Region</h3>
                         <div className="mt-3 space-y-3">
                           <div className="relative pl-4 border-l border-th-rule">
                             <div className="absolute -left-1 top-1 h-2 w-2 rounded-full bg-th-dot"></div>
                             <p className="text-sm font-medium text-th-heading">Website Executive</p>
-                            <p className="text-xs text-th-muted">Aug 2024 — Present</p>
+                            <p className="text-xs text-th-muted">Aug 2024 — Jun 2025</p>
                             <p className="mt-1 text-sm leading-normal text-th-prose">Updated the official webpage regularly using HTML, CSS & JavaScript.</p>
                           </div>
                           <div className="relative pl-4 border-l border-th-rule">
@@ -632,14 +640,14 @@ export default function Portfolio() {
                     </div>
 
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
-                      <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Jun 2022 —<span className="hidden md:block"></span> Present</header>
+                      <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Jun 2022 —<span className="hidden md:block"></span> Jun 2025</header>
                       <div className="z-10 md:col-span-6">
                         <h3 className="font-medium leading-snug text-th-heading">Key Club International</h3>
                         <div className="mt-3 space-y-3">
                           <div className="relative pl-4 border-l border-th-rule">
                             <div className="absolute -left-1 top-1 h-2 w-2 rounded-full bg-th-dot"></div>
                             <p className="text-sm font-medium text-th-heading">Co-President</p>
-                            <p className="text-xs text-th-muted">Jun 2023 — Present</p>
+                            <p className="text-xs text-th-muted">Jun 2023 — Jun 2025</p>
                           </div>
                           <div className="relative pl-4 border-l border-th-rule">
                             <div className="absolute -left-1 top-1 h-2 w-2 rounded-full bg-th-dot"></div>
