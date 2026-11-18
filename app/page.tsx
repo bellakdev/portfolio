@@ -1,14 +1,126 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+
+// Collapsible groups, in page order. As you scroll, the group you're reading opens
+// and the others close (see the auto-accordion effect below).
+const AUTO_GROUPS = [
+  { id: 'ec-university', kind: 'ec', key: 'university' },
+  { id: 'ec-highschool', kind: 'ec', key: 'highschool' },
+  { id: 'proj-2026', kind: 'proj', key: '2026' },
+  { id: 'proj-2025', kind: 'proj', key: '2025' },
+  { id: 'proj-2024', kind: 'proj', key: '2024' },
+  { id: 'proj-2023', kind: 'proj', key: '2023' },
+  { id: 'proj-2022', kind: 'proj', key: '2022' },
+] as const;
 
 export default function Portfolio() {
   const [activeSection, setActiveSection] = useState('Skills');
   const [openExtracurriculars, setOpenExtracurriculars] = useState<Record<string, boolean>>({ university: true, highschool: false });
-  const [openProjectYears, setOpenProjectYears] = useState<Record<string, boolean>>({ '2026': true, '2025': false, '2024': false, '2023': false, '2022': false });
+  const [openProjectYears, setOpenProjectYears] = useState<Record<string, boolean>>({ '2026': false, '2025': false, '2024': false, '2023': false, '2022': false });
 
   const toggleExtracurricular = (key: string) => setOpenExtracurriculars(prev => ({ ...prev, [key]: !prev[key] }));
   const toggleProjectYear = (key: string) => setOpenProjectYears(prev => ({ ...prev, [key]: !prev[key] }));
+
+  // ── Auto-accordion: open the group being read, close the rest ──
+  // Auto changes resize instantly (content still fades in) and the scroll position is
+  // compensated around an "anchor" header, so the content you're reading never jumps.
+  const [instantGroups, setInstantGroups] = useState<string[]>([]);
+  const noAnim = (id: string) => (instantGroups.includes(id) ? 'transition-none!' : '');
+  const activeGroupRef = useRef(-1);
+  const lastScrollYRef = useRef(0);
+  const programmaticScrollRef = useRef(false);
+  const lastGroupChangeRef = useRef(0);
+  const pendingAnchorRef = useRef<{ id: string; top: number } | null>(null);
+
+  const applyActiveGroup = (next: number, anchorIdx: number) => {
+    const anchorId = AUTO_GROUPS[anchorIdx].id;
+    const anchorEl = document.getElementById(anchorId);
+    pendingAnchorRef.current = anchorEl ? { id: anchorId, top: anchorEl.getBoundingClientRect().top } : null;
+    activeGroupRef.current = next;
+    lastGroupChangeRef.current = performance.now();
+    setInstantGroups(AUTO_GROUPS.map(g => g.id));
+    const ec: Record<string, boolean> = {};
+    const proj: Record<string, boolean> = {};
+    AUTO_GROUPS.forEach((g, i) => { (g.kind === 'ec' ? ec : proj)[g.key] = i === next; });
+    setOpenExtracurriculars(ec);
+    setOpenProjectYears(proj);
+  };
+
+  const evaluateActiveGroup = (mode: 'scroll' | 'jump' | 'overscroll') => {
+    if (programmaticScrollRef.current || pendingAnchorRef.current) return;
+    const y = window.scrollY;
+    // 'overscroll' = trying to scroll down while already at the bottom (no scroll event fires)
+    const delta = mode === 'overscroll' ? 1 : y - lastScrollYRef.current;
+    lastScrollYRef.current = y;
+    const vh = window.innerHeight;
+    const tops = AUTO_GROUPS.map(g => document.getElementById(g.id)?.getBoundingClientRect().top ?? Infinity);
+    // Last group whose header has passed the reading line (40% down the viewport)
+    let computed = 0;
+    tops.forEach((t, i) => { if (t <= vh * 0.4) computed = i; });
+
+    const cur = activeGroupRef.current;
+    let next = computed;
+    if (mode !== 'jump' && cur >= 0) {
+      if (delta > 0) {
+        // Near the bottom the last headers can't reach the reading line, so step forward anyway
+        // (with a cooldown so a single flick at the bottom doesn't race through every group)
+        const atBottom = vh + y >= document.documentElement.scrollHeight - 4
+          && performance.now() - lastGroupChangeRef.current > 800;
+        // Step one group at a time so collapsed headers bunched together aren't skipped
+        next = computed > cur || atBottom ? Math.min(AUTO_GROUPS.length - 1, cur + 1) : cur;
+      } else if (delta < 0) {
+        // Hysteresis: only go back once the current header has dropped well below the line
+        next = tops[cur] > vh * 0.6 ? Math.max(0, cur - 1) : cur;
+      } else {
+        return;
+      }
+    }
+    if (next === cur) return;
+    const anchorIdx = mode === 'jump' || cur < 0 ? next : Math.max(cur, next);
+    applyActiveGroup(next, anchorIdx);
+  };
+
+  useLayoutEffect(() => {
+    const pending = pendingAnchorRef.current;
+    if (!pending) return;
+    pendingAnchorRef.current = null;
+    const el = document.getElementById(pending.id);
+    if (el) {
+      const shift = el.getBoundingClientRect().top - pending.top;
+      if (Math.abs(shift) > 0.5) window.scrollTo({ top: window.scrollY + shift, behavior: 'instant' });
+    }
+    lastScrollYRef.current = window.scrollY;
+    // Re-enable animations for manual toggles on the next frame
+    requestAnimationFrame(() => setInstantGroups([]));
+  }, [openExtracurriculars, openProjectYears, instantGroups]);
+
+  useEffect(() => {
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => { ticking = false; evaluateActiveGroup('scroll'); });
+    };
+    const atBottom = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+    const onWheel = (e: WheelEvent) => { if (e.deltaY > 0 && atBottom()) evaluateActiveGroup('overscroll'); };
+    let touchY = 0;
+    const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0].clientY; };
+    const onTouchMove = (e: TouchEvent) => { if (touchY - e.touches[0].clientY > 10 && atBottom()) evaluateActiveGroup('overscroll'); };
+    lastScrollYRef.current = window.scrollY;
+    evaluateActiveGroup('jump');
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('wheel', onWheel, { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const sections = document.querySelectorAll('section[id]');
@@ -146,10 +258,13 @@ export default function Portfolio() {
       setOpenProjectYears(prev => ({ ...prev, [year]: true }));
     }
 
+    // Pause the auto-accordion while we animate to the target
+    programmaticScrollRef.current = true;
+
     // Small delay to let the dropdown open before scrolling
     setTimeout(() => {
       const el = document.getElementById(id);
-      if (!el) return;
+      if (!el) { programmaticScrollRef.current = false; return; }
       const top = el.getBoundingClientRect().top + window.scrollY - 96;
       const distance = Math.abs(top - window.scrollY);
       const duration = Math.min(300 + distance * 0.05, 500);
@@ -162,7 +277,13 @@ export default function Portfolio() {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
         window.scrollTo(0, start + (top - start) * easeOutCubic(progress));
-        if (progress < 1) requestAnimationFrame(animate);
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          programmaticScrollRef.current = false;
+          lastScrollYRef.current = window.scrollY;
+          evaluateActiveGroup('jump');
+        }
       };
 
       requestAnimationFrame(animate);
@@ -527,7 +648,7 @@ export default function Portfolio() {
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openExtracurriculars.university ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">University</h4>
                 </button>
-                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${openExtracurriculars.university ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('ec-university')} ${openExtracurriculars.university ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openExtracurriculars.university ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
@@ -562,7 +683,7 @@ export default function Portfolio() {
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openExtracurriculars.highschool ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">High School</h4>
                 </button>
-                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${openExtracurriculars.highschool ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('ec-highschool')} ${openExtracurriculars.highschool ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openExtracurriculars.highschool ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
@@ -716,7 +837,7 @@ export default function Portfolio() {
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2026'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2026</h4>
                 </button>
-                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${openProjectYears['2026'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2026')} ${openProjectYears['2026'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2026'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
@@ -821,7 +942,7 @@ export default function Portfolio() {
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2025'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2025</h4>
                 </button>
-                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${openProjectYears['2025'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2025')} ${openProjectYears['2025'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2025'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
@@ -874,7 +995,7 @@ export default function Portfolio() {
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2024'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2024</h4>
                 </button>
-                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${openProjectYears['2024'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2024')} ${openProjectYears['2024'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2024'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
@@ -948,7 +1069,7 @@ export default function Portfolio() {
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2023'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2023</h4>
                 </button>
-                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${openProjectYears['2023'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2023')} ${openProjectYears['2023'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2023'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
@@ -1031,7 +1152,7 @@ export default function Portfolio() {
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2022'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2022</h4>
                 </button>
-                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${openProjectYears['2022'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2022')} ${openProjectYears['2022'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2022'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
