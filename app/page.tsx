@@ -2,8 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-// Collapsible groups, in page order. As you scroll, the group you're reading opens
-// and the others close (see the auto-accordion effect below).
+// Collapsible groups, in page order. They open just before they scroll into view and close
+// once they're well off-screen, so scrolling feels like one continuous page.
 const AUTO_GROUPS = [
   { id: 'ec-university', kind: 'ec', key: 'university' },
   { id: 'ec-highschool', kind: 'ec', key: 'highschool' },
@@ -14,83 +14,89 @@ const AUTO_GROUPS = [
   { id: 'proj-2022', kind: 'proj', key: '2022' },
 ] as const;
 
+// Elements used to keep the reading position fixed when content off-screen changes size
+const ANCHOR_SELECTOR = 'main section > h3, main .group, main footer';
+
 export default function Portfolio() {
   const [activeSection, setActiveSection] = useState('Skills');
   const [openExtracurriculars, setOpenExtracurriculars] = useState<Record<string, boolean>>({ university: true, highschool: false });
   const [openProjectYears, setOpenProjectYears] = useState<Record<string, boolean>>({ '2026': false, '2025': false, '2024': false, '2023': false, '2022': false });
 
-  const toggleExtracurricular = (key: string) => setOpenExtracurriculars(prev => ({ ...prev, [key]: !prev[key] }));
-  const toggleProjectYear = (key: string) => setOpenProjectYears(prev => ({ ...prev, [key]: !prev[key] }));
-
-  // ── Auto-accordion: open the group being read, close the rest ──
-  // Auto changes resize instantly (content still fades in) and the scroll position is
-  // compensated around an "anchor" header, so the content you're reading never jumps.
-  const [instantGroups, setInstantGroups] = useState<string[]>([]);
-  const noAnim = (id: string) => (instantGroups.includes(id) ? 'transition-none!' : '');
-  const activeGroupRef = useRef(-1);
-  const lastScrollYRef = useRef(0);
-  const programmaticScrollRef = useRef(false);
-  const lastGroupChangeRef = useRef(0);
-  const pendingAnchorRef = useRef<{ id: string; top: number } | null>(null);
-
-  const applyActiveGroup = (next: number, anchorIdx: number) => {
-    const anchorId = AUTO_GROUPS[anchorIdx].id;
-    const anchorEl = document.getElementById(anchorId);
-    pendingAnchorRef.current = anchorEl ? { id: anchorId, top: anchorEl.getBoundingClientRect().top } : null;
-    activeGroupRef.current = next;
-    lastGroupChangeRef.current = performance.now();
-    setInstantGroups(AUTO_GROUPS.map(g => g.id));
-    const ec: Record<string, boolean> = {};
-    const proj: Record<string, boolean> = {};
-    AUTO_GROUPS.forEach((g, i) => { (g.kind === 'ec' ? ec : proj)[g.key] = i === next; });
-    setOpenExtracurriculars(ec);
-    setOpenProjectYears(proj);
+  // Groups the user toggled by hand; auto open/close leaves them alone until they scroll far away
+  const manualGroupsRef = useRef<Set<string>>(new Set());
+  const toggleExtracurricular = (key: string) => {
+    manualGroupsRef.current.add(`ec-${key}`);
+    setOpenExtracurriculars(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+  const toggleProjectYear = (key: string) => {
+    manualGroupsRef.current.add(`proj-${key}`);
+    setOpenProjectYears(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const evaluateActiveGroup = (mode: 'scroll' | 'jump' | 'overscroll') => {
-    if (programmaticScrollRef.current || pendingAnchorRef.current) return;
-    const y = window.scrollY;
-    // 'overscroll' = trying to scroll down while already at the bottom (no scroll event fires)
-    const delta = mode === 'overscroll' ? 1 : y - lastScrollYRef.current;
-    lastScrollYRef.current = y;
-    const vh = window.innerHeight;
-    const tops = AUTO_GROUPS.map(g => document.getElementById(g.id)?.getBoundingClientRect().top ?? Infinity);
-    // Last group whose header has passed the reading line (40% down the viewport)
-    let computed = 0;
-    tops.forEach((t, i) => { if (t <= vh * 0.4) computed = i; });
+  // ── Seamless auto open/close ──
+  // Only groups that are off-screen change, they change instantly (no animation), and the
+  // scroll position is compensated around an element on screen, so nothing visibly moves.
+  const [instantGroups, setInstantGroups] = useState<string[]>([]);
+  const noAnim = (id: string) => (instantGroups.includes(id) ? 'transition-none!' : '');
+  const programmaticScrollRef = useRef(false);
+  const pendingAnchorRef = useRef<{ el: Element; top: number } | null>(null);
+  const openStateRef = useRef({ ec: openExtracurriculars, proj: openProjectYears });
+  useLayoutEffect(() => { openStateRef.current = { ec: openExtracurriculars, proj: openProjectYears }; });
 
-    const cur = activeGroupRef.current;
-    let next = computed;
-    if (mode !== 'jump' && cur >= 0) {
-      if (delta > 0) {
-        // Near the bottom the last headers can't reach the reading line, so step forward anyway
-        // (with a cooldown so a single flick at the bottom doesn't race through every group)
-        const atBottom = vh + y >= document.documentElement.scrollHeight - 4
-          && performance.now() - lastGroupChangeRef.current > 800;
-        // Step one group at a time so collapsed headers bunched together aren't skipped
-        next = computed > cur || atBottom ? Math.min(AUTO_GROUPS.length - 1, cur + 1) : cur;
-      } else if (delta < 0) {
-        // Hysteresis: only go back once the current header has dropped well below the line
-        next = tops[cur] > vh * 0.6 ? Math.max(0, cur - 1) : cur;
-      } else {
-        return;
+  const findAnchor = () => {
+    const mid = window.innerHeight / 2;
+    let best: Element | null = null;
+    let bestDist = Infinity;
+    document.querySelectorAll(ANCHOR_SELECTOR).forEach((el) => {
+      if (el.closest('.grid-rows-\\[0fr\\]')) return; // inside a collapsed group
+      const r = el.getBoundingClientRect();
+      if (r.height === 0) return;
+      const dist = Math.abs(r.top - mid);
+      if (dist < bestDist) { best = el; bestDist = dist; }
+    });
+    return best as Element | null;
+  };
+
+  const syncGroups = () => {
+    if (programmaticScrollRef.current || pendingAnchorRef.current) return;
+    const vh = window.innerHeight;
+    const openMargin = vh * 0.75;  // open when a group gets this close to the screen
+    const closeMargin = vh * 1.5;  // close once it's this far away (hysteresis)
+    const { ec, proj } = openStateRef.current;
+    const nextEc = { ...ec };
+    const nextProj = { ...proj };
+    let changed = false;
+
+    AUTO_GROUPS.forEach((g) => {
+      const el = document.getElementById(g.id);
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const state = g.kind === 'ec' ? nextEc : nextProj;
+      const isOpen = !!state[g.key];
+      const far = r.bottom < -closeMargin || r.top > vh + closeMargin;
+      if (manualGroupsRef.current.has(g.id)) {
+        if (!far) return;
+        manualGroupsRef.current.delete(g.id);
       }
-    }
-    if (next === cur) return;
-    const anchorIdx = mode === 'jump' || cur < 0 ? next : Math.max(cur, next);
-    applyActiveGroup(next, anchorIdx);
+      const near = r.top < vh + openMargin && r.bottom > -openMargin;
+      if (!isOpen && near) { state[g.key] = true; changed = true; }
+      else if (isOpen && far) { state[g.key] = false; changed = true; }
+    });
+    if (!changed) return;
+
+    const anchor = findAnchor();
+    pendingAnchorRef.current = anchor ? { el: anchor, top: anchor.getBoundingClientRect().top } : null;
+    setInstantGroups(AUTO_GROUPS.map(g => g.id));
+    setOpenExtracurriculars(nextEc);
+    setOpenProjectYears(nextProj);
   };
 
   useLayoutEffect(() => {
     const pending = pendingAnchorRef.current;
     if (!pending) return;
     pendingAnchorRef.current = null;
-    const el = document.getElementById(pending.id);
-    if (el) {
-      const shift = el.getBoundingClientRect().top - pending.top;
-      if (Math.abs(shift) > 0.5) window.scrollTo({ top: window.scrollY + shift, behavior: 'instant' });
-    }
-    lastScrollYRef.current = window.scrollY;
+    const shift = pending.el.getBoundingClientRect().top - pending.top;
+    if (Math.abs(shift) > 0.5) window.scrollTo({ top: window.scrollY + shift, behavior: 'instant' });
     // Re-enable animations for manual toggles on the next frame
     requestAnimationFrame(() => setInstantGroups([]));
   }, [openExtracurriculars, openProjectYears, instantGroups]);
@@ -100,24 +106,14 @@ export default function Portfolio() {
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => { ticking = false; evaluateActiveGroup('scroll'); });
+      requestAnimationFrame(() => { ticking = false; syncGroups(); });
     };
-    const atBottom = () => window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
-    const onWheel = (e: WheelEvent) => { if (e.deltaY > 0 && atBottom()) evaluateActiveGroup('overscroll'); };
-    let touchY = 0;
-    const onTouchStart = (e: TouchEvent) => { touchY = e.touches[0].clientY; };
-    const onTouchMove = (e: TouchEvent) => { if (touchY - e.touches[0].clientY > 10 && atBottom()) evaluateActiveGroup('overscroll'); };
-    lastScrollYRef.current = window.scrollY;
-    evaluateActiveGroup('jump');
+    syncGroups();
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('wheel', onWheel, { passive: true });
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('wheel', onWheel);
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('resize', onScroll);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -281,8 +277,7 @@ export default function Portfolio() {
           requestAnimationFrame(animate);
         } else {
           programmaticScrollRef.current = false;
-          lastScrollYRef.current = window.scrollY;
-          evaluateActiveGroup('jump');
+          syncGroups();
         }
       };
 
@@ -649,7 +644,7 @@ export default function Portfolio() {
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">University</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('ec-university')} ${openExtracurriculars.university ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openExtracurriculars.university ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('ec-university')} ${openExtracurriculars.university ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
                       <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Sep 2025 —<span className="hidden md:block"></span> Present</header>
@@ -684,7 +679,7 @@ export default function Portfolio() {
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">High School</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('ec-highschool')} ${openExtracurriculars.highschool ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openExtracurriculars.highschool ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('ec-highschool')} ${openExtracurriculars.highschool ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
                       <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Aug 2024 —<span className="hidden md:block"></span> Jun 2025</header>
@@ -838,7 +833,7 @@ export default function Portfolio() {
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2026</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2026')} ${openProjectYears['2026'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2026'] ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2026')} ${openProjectYears['2026'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
                       <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Apr 2026 —<span className="hidden md:block"></span> Present</header>
@@ -943,7 +938,7 @@ export default function Portfolio() {
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2025</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2025')} ${openProjectYears['2025'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2025'] ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2025')} ${openProjectYears['2025'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
                       <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Feb 2025 —<span className="hidden md:block"></span> Jun 2025</header>
@@ -996,7 +991,7 @@ export default function Portfolio() {
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2024</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2024')} ${openProjectYears['2024'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2024'] ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2024')} ${openProjectYears['2024'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
                       <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">May 2024</header>
@@ -1070,7 +1065,7 @@ export default function Portfolio() {
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2023</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2023')} ${openProjectYears['2023'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2023'] ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2023')} ${openProjectYears['2023'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
                       <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Sep 2023</header>
@@ -1153,7 +1148,7 @@ export default function Portfolio() {
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2022</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2022')} ${openProjectYears['2022'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
-                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${openProjectYears['2022'] ? 'opacity-100' : 'opacity-0'}`}>
+                  <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2022')} ${openProjectYears['2022'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
                       <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Nov 2022</header>
