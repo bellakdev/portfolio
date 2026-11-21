@@ -24,16 +24,54 @@ export default function Portfolio() {
 
   // Groups the user toggled by hand; auto open/close leaves them alone until they scroll far away
   const manualGroupsRef = useRef<Set<string>>(new Set());
+  // Smoothly scroll the window to `top`, pausing auto open/close while it runs
+  const animateScroll = (top: number, onDone?: () => void) => {
+    programmaticScrollRef.current = true;
+    const start = window.scrollY;
+    const distance = Math.abs(top - start);
+    const duration = Math.min(350 + distance * 0.05, 650);
+    const startTime = performance.now();
+    const easeInOutCubic = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+    const step = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      window.scrollTo(0, start + (top - start) * easeInOutCubic(progress));
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      } else {
+        programmaticScrollRef.current = false;
+        if (onDone) onDone(); else syncGroups();
+      }
+    };
+    requestAnimationFrame(step);
+  };
+
   const toggleGroup = (id: string, isOpen: boolean, flip: () => void) => {
+    if (programmaticScrollRef.current) return;
     manualGroupsRef.current.add(id);
     const el = document.getElementById(id);
     const header = el?.querySelector(':scope > button');
     if (el && header && isOpen) {
-      // Collapsing from the sticky header: collapse instantly and keep the header where it is
       const stickyTop = parseFloat(getComputedStyle(header).top) || 0;
-      if (el.getBoundingClientRect().top < stickyTop - 1) {
-        pendingAnchorRef.current = { el, top: stickyTop };
-        setInstantGroups([id]);
+      const next = el.nextElementSibling ?? el.parentElement?.nextElementSibling ?? null;
+      if (el.getBoundingClientRect().top < stickyTop - 1 && next) {
+        // Closing from the pinned header: glide on to whatever comes next (e.g. 2026 -> 2025),
+        // then collapse the finished group off-screen without moving anything you can see.
+        const nextGroup = AUTO_GROUPS.find(g => g.id === next.id);
+        if (nextGroup) {
+          setInstantGroups([nextGroup.id]);
+          if (nextGroup.kind === 'ec') setOpenExtracurriculars(prev => ({ ...prev, [nextGroup.key]: true }));
+          else setOpenProjectYears(prev => ({ ...prev, [nextGroup.key]: true }));
+        }
+        programmaticScrollRef.current = true;
+        requestAnimationFrame(() => {
+          const target = next.getBoundingClientRect().top + window.scrollY - stickyTop;
+          animateScroll(target, () => {
+            pendingAnchorRef.current = { el: next, top: next.getBoundingClientRect().top };
+            setInstantGroups([id]);
+            flip();
+          });
+        });
+        return;
       }
     }
     flip();
@@ -53,10 +91,29 @@ export default function Portfolio() {
       if (!el || !header) return;
       const stickyTop = parseFloat(getComputedStyle(header).top) || 0;
       const r = el.getBoundingClientRect();
-      if (r.top < stickyTop - 0.5 && r.bottom > stickyTop + header.getBoundingClientRect().height) stuck = g.id;
+      if (r.top <= stickyTop + 0.5 && r.bottom > stickyTop + header.getBoundingClientRect().height) stuck = g.id;
     });
     setStuckGroup(prev => (prev === stuck ? prev : stuck));
+
+    // Work Experience has no dropdowns; show a pinned bar with the role you're reading
+    const exp = document.getElementById('experience');
+    const bar = document.getElementById('experience-bar');
+    let company: string | null = null;
+    if (exp && bar) {
+      const stickyTop = parseFloat(getComputedStyle(bar).top) || 0;
+      const barH = (bar.firstElementChild as HTMLElement | null)?.offsetHeight ?? 40;
+      const r = exp.getBoundingClientRect();
+      if (r.top <= stickyTop + 0.5 && r.bottom > stickyTop + barH) {
+        exp.querySelectorAll(':scope > .group').forEach((entry) => {
+          if (entry.getBoundingClientRect().top <= stickyTop + barH + 8 || !company) {
+            company = entry.querySelector('h3')?.textContent?.trim() ?? null;
+          }
+        });
+      }
+    }
+    setStuckExperience(prev => (prev === company ? prev : company));
   };
+  const [stuckExperience, setStuckExperience] = useState<string | null>(null);
 
   // ── Seamless auto open/close ──
   // Only groups that are off-screen change, they change instantly (no animation), and the
@@ -287,27 +344,7 @@ export default function Portfolio() {
     setTimeout(() => {
       const el = document.getElementById(id);
       if (!el) { programmaticScrollRef.current = false; return; }
-      const top = el.getBoundingClientRect().top + window.scrollY - 96;
-      const distance = Math.abs(top - window.scrollY);
-      const duration = Math.min(300 + distance * 0.05, 500);
-      const start = window.scrollY;
-      const startTime = performance.now();
-
-      const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-
-      const animate = (now: number) => {
-        const elapsed = now - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        window.scrollTo(0, start + (top - start) * easeOutCubic(progress));
-        if (progress < 1) {
-          requestAnimationFrame(animate);
-        } else {
-          programmaticScrollRef.current = false;
-          syncGroups();
-        }
-      };
-
-      requestAnimationFrame(animate);
+      animateScroll(el.getBoundingClientRect().top + window.scrollY - 96);
     }, id.startsWith('ec-') || id.startsWith('proj-') ? 50 : 0);
   };
 
@@ -584,6 +621,14 @@ export default function Portfolio() {
 
             <section id="experience" className="scroll-mt-16 lg:scroll-mt-24 space-y-8">
               <h3 className="text-lg font-bold uppercase tracking-widest text-th-heading">Work Experience</h3>
+              {/* Pinned bar (zero-height so it doesn't affect layout), matching the dropdown headers */}
+              <div id="experience-bar" className="sticky top-[53px] lg:top-0 z-20 h-0 mt-0!" aria-hidden={!stuckExperience}>
+                <div className={`-mx-1 flex items-center gap-2 px-1 py-2 bg-th-bg border-b border-th-line transition-opacity duration-200 ${stuckExperience ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                  <span className="h-1.5 w-1.5 mx-[5px] shrink-0 rounded-full bg-th-accent"></span>
+                  <span className="text-xs font-semibold uppercase tracking-wider text-th-muted">Work Experience /</span>
+                  <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub truncate">{stuckExperience}</h4>
+                </div>
+              </div>
 
               <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
                 <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2 flex md:block">Fall 2026<span className="hidden md:block"></span><span className="ml-auto md:ml-0"> Sep - Dec</span></header>
