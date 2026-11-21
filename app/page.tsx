@@ -15,7 +15,7 @@ const AUTO_GROUPS = [
 ] as const;
 
 // Elements used to keep the reading position fixed when content off-screen changes size
-const ANCHOR_SELECTOR = 'main section > h3, main .group, main footer';
+const ANCHOR_SELECTOR = 'main section > h3, main .group:not(button), main footer';
 
 export default function Portfolio() {
   const [activeSection, setActiveSection] = useState('Skills');
@@ -24,13 +24,38 @@ export default function Portfolio() {
 
   // Groups the user toggled by hand; auto open/close leaves them alone until they scroll far away
   const manualGroupsRef = useRef<Set<string>>(new Set());
-  const toggleExtracurricular = (key: string) => {
-    manualGroupsRef.current.add(`ec-${key}`);
-    setOpenExtracurriculars(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleGroup = (id: string, isOpen: boolean, flip: () => void) => {
+    manualGroupsRef.current.add(id);
+    const el = document.getElementById(id);
+    const header = el?.querySelector(':scope > button');
+    if (el && header && isOpen) {
+      // Collapsing from the sticky header: collapse instantly and keep the header where it is
+      const stickyTop = parseFloat(getComputedStyle(header).top) || 0;
+      if (el.getBoundingClientRect().top < stickyTop - 1) {
+        pendingAnchorRef.current = { el, top: stickyTop };
+        setInstantGroups([id]);
+      }
+    }
+    flip();
   };
-  const toggleProjectYear = (key: string) => {
-    manualGroupsRef.current.add(`proj-${key}`);
-    setOpenProjectYears(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleExtracurricular = (key: string) =>
+    toggleGroup(`ec-${key}`, !!openExtracurriculars[key], () => setOpenExtracurriculars(prev => ({ ...prev, [key]: !prev[key] })));
+  const toggleProjectYear = (key: string) =>
+    toggleGroup(`proj-${key}`, !!openProjectYears[key], () => setOpenProjectYears(prev => ({ ...prev, [key]: !prev[key] })));
+
+  // Which group's header is currently pinned to the top (shows the section name + a divider)
+  const [stuckGroup, setStuckGroup] = useState<string | null>(null);
+  const updateStuckGroup = () => {
+    let stuck: string | null = null;
+    AUTO_GROUPS.forEach((g) => {
+      const el = document.getElementById(g.id);
+      const header = el?.querySelector(':scope > button');
+      if (!el || !header) return;
+      const stickyTop = parseFloat(getComputedStyle(header).top) || 0;
+      const r = el.getBoundingClientRect();
+      if (r.top < stickyTop - 0.5 && r.bottom > stickyTop + header.getBoundingClientRect().height) stuck = g.id;
+    });
+    setStuckGroup(prev => (prev === stuck ? prev : stuck));
   };
 
   // ── Seamless auto open/close ──
@@ -106,9 +131,10 @@ export default function Portfolio() {
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => { ticking = false; syncGroups(); });
+      requestAnimationFrame(() => { ticking = false; syncGroups(); updateStuckGroup(); });
     };
     syncGroups();
+    updateStuckGroup();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onScroll, { passive: true });
     return () => {
@@ -639,8 +665,9 @@ export default function Portfolio() {
 
               {/* University */}
               <div id="ec-university">
-                <button onClick={() => toggleExtracurricular('university')} className="flex items-center gap-2 w-full text-left group">
+                <button onClick={() => toggleExtracurricular('university')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'ec-university' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openExtracurriculars.university ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                  {stuckGroup === 'ec-university' && <span className="text-xs font-semibold uppercase tracking-wider text-th-muted">Extracurriculars /</span>}
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">University</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('ec-university')} ${openExtracurriculars.university ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
@@ -674,8 +701,9 @@ export default function Portfolio() {
 
               {/* High School */}
               <div id="ec-highschool">
-                <button onClick={() => toggleExtracurricular('highschool')} className="flex items-center gap-2 w-full text-left group">
+                <button onClick={() => toggleExtracurricular('highschool')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'ec-highschool' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openExtracurriculars.highschool ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                  {stuckGroup === 'ec-highschool' && <span className="text-xs font-semibold uppercase tracking-wider text-th-muted">Extracurriculars /</span>}
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">High School</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('ec-highschool')} ${openExtracurriculars.highschool ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
@@ -828,8 +856,9 @@ export default function Portfolio() {
 
               {/* 2026 */}
               <div id="proj-2026">
-                <button onClick={() => toggleProjectYear('2026')} className="flex items-center gap-2 w-full text-left group">
+                <button onClick={() => toggleProjectYear('2026')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2026' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2026'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                  {stuckGroup === 'proj-2026' && <span className="text-xs font-semibold uppercase tracking-wider text-th-muted">Projects /</span>}
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2026</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2026')} ${openProjectYears['2026'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
@@ -933,8 +962,9 @@ export default function Portfolio() {
 
               {/* 2025 */}
               <div id="proj-2025">
-                <button onClick={() => toggleProjectYear('2025')} className="flex items-center gap-2 w-full text-left group">
+                <button onClick={() => toggleProjectYear('2025')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2025' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2025'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                  {stuckGroup === 'proj-2025' && <span className="text-xs font-semibold uppercase tracking-wider text-th-muted">Projects /</span>}
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2025</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2025')} ${openProjectYears['2025'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
@@ -986,8 +1016,9 @@ export default function Portfolio() {
 
               {/* 2024 */}
               <div id="proj-2024">
-                <button onClick={() => toggleProjectYear('2024')} className="flex items-center gap-2 w-full text-left group">
+                <button onClick={() => toggleProjectYear('2024')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2024' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2024'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                  {stuckGroup === 'proj-2024' && <span className="text-xs font-semibold uppercase tracking-wider text-th-muted">Projects /</span>}
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2024</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2024')} ${openProjectYears['2024'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
@@ -1060,8 +1091,9 @@ export default function Portfolio() {
 
               {/* 2023 */}
               <div id="proj-2023">
-                <button onClick={() => toggleProjectYear('2023')} className="flex items-center gap-2 w-full text-left group">
+                <button onClick={() => toggleProjectYear('2023')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2023' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2023'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                  {stuckGroup === 'proj-2023' && <span className="text-xs font-semibold uppercase tracking-wider text-th-muted">Projects /</span>}
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2023</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2023')} ${openProjectYears['2023'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
@@ -1143,8 +1175,9 @@ export default function Portfolio() {
 
               {/* 2022 */}
               <div id="proj-2022">
-                <button onClick={() => toggleProjectYear('2022')} className="flex items-center gap-2 w-full text-left group">
+                <button onClick={() => toggleProjectYear('2022')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2022' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2022'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+                  {stuckGroup === 'proj-2022' && <span className="text-xs font-semibold uppercase tracking-wider text-th-muted">Projects /</span>}
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2022</h4>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2022')} ${openProjectYears['2022'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
