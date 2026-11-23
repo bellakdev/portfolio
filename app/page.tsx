@@ -16,7 +16,9 @@ const AUTO_GROUPS = [
 ] as const;
 
 // Elements used to keep the reading position fixed when content off-screen changes size
-const ANCHOR_SELECTOR = 'main section > h3, main .group:not(button), main footer';
+// (section titles and dropdown headers are sticky, so their on-screen position doesn't follow the content)
+// Dropdown wrappers count too: their top is the header's natural position.
+const ANCHOR_SELECTOR = 'main .group:not(button), main [id^="ec-"], main [id^="proj-"], main section, main footer';
 
 export default function Portfolio() {
   const [activeSection, setActiveSection] = useState('Skills');
@@ -25,6 +27,16 @@ export default function Portfolio() {
 
   // Groups the user toggled by hand; auto open/close leaves them alone until they scroll far away
   const manualGroupsRef = useRef<Set<string>>(new Set());
+  // Scroll position that puts a section's title (or a dropdown's header) exactly at its pinned spot.
+  // Measured from the parent, because a sticky element's on-screen box isn't its place in the page.
+  const pinLandingY = (container: Element) => {
+    const pinned = container.querySelector(':scope > h3, :scope > button');
+    if (!pinned) return container.getBoundingClientRect().top + window.scrollY;
+    const style = getComputedStyle(pinned);
+    const naturalTop = container.getBoundingClientRect().top + (parseFloat(style.marginTop) || 0);
+    return naturalTop + window.scrollY - (parseFloat(style.top) || 0);
+  };
+
   // Smoothly scroll the window to `top`, pausing auto open/close while it runs
   const animateScroll = (top: number, onDone?: () => void) => {
     programmaticScrollRef.current = true;
@@ -53,19 +65,24 @@ export default function Portfolio() {
     const header = el?.querySelector(':scope > button');
     if (el && header && isOpen) {
       const stickyTop = parseFloat(getComputedStyle(header).top) || 0;
-      const next = el.nextElementSibling ?? el.parentElement?.nextElementSibling ?? null;
+      // What comes next: the following dropdown in this section, or else the next section
+      const sibling = el.nextElementSibling;
+      const nextGroup = AUTO_GROUPS.find(g => g.id === sibling?.id);
+      const next = nextGroup ? sibling : (el.closest('section')?.nextElementSibling ?? null);
       if (el.getBoundingClientRect().top < stickyTop - 1 && next) {
         // Closing from the pinned header: glide on to whatever comes next (e.g. 2026 -> 2025),
         // then collapse the finished group off-screen without moving anything you can see.
-        const nextGroup = AUTO_GROUPS.find(g => g.id === next.id);
-        if (nextGroup) {
-          setInstantGroups([nextGroup.id]);
-          if (nextGroup.kind === 'ec') setOpenExtracurriculars(prev => ({ ...prev, [nextGroup.key]: true }));
-          else setOpenProjectYears(prev => ({ ...prev, [nextGroup.key]: true }));
+        // Make sure what we land on is open: the next dropdown, or the next section's first one
+        const openTarget = nextGroup ?? AUTO_GROUPS.find(g => next.querySelector(`#${g.id}`));
+        if (openTarget) {
+          setInstantGroups([openTarget.id]);
+          if (openTarget.kind === 'ec') setOpenExtracurriculars(prev => ({ ...prev, [openTarget.key]: true }));
+          else setOpenProjectYears(prev => ({ ...prev, [openTarget.key]: true }));
         }
         programmaticScrollRef.current = true;
         requestAnimationFrame(() => {
-          const target = next.getBoundingClientRect().top + window.scrollY - stickyTop;
+          // Land with the next dropdown header under the title, or the next section title at the top
+          const target = next.matches('section') || nextGroup ? pinLandingY(next) : next.getBoundingClientRect().top + window.scrollY - stickyTop;
           animateScroll(target, () => {
             pendingAnchorRef.current = { el: next, top: next.getBoundingClientRect().top };
             setInstantGroups([id]);
@@ -96,6 +113,15 @@ export default function Portfolio() {
     });
     setStuckGroup(prev => (prev === stuck ? prev : stuck));
 
+    let section: string | null = null;
+    document.querySelectorAll('main section[id]').forEach((sec) => {
+      const title = sec.querySelector(':scope > h3');
+      if (!title) return;
+      const stickyTop = parseFloat(getComputedStyle(title).top) || 0;
+      if (title.getBoundingClientRect().top <= stickyTop + 0.5 && sec.getBoundingClientRect().bottom > stickyTop) section = sec.id;
+    });
+    setStuckSection(prev => (prev === section ? prev : section));
+
     // Work Experience has no dropdowns; show a pinned bar with the role you're reading
     const exp = document.getElementById('experience');
     const bar = document.getElementById('experience-bar');
@@ -104,10 +130,9 @@ export default function Portfolio() {
       const stickyTop = parseFloat(getComputedStyle(bar).top) || 0;
       const barH = (bar.firstElementChild as HTMLElement | null)?.offsetHeight ?? 40;
       const r = exp.getBoundingClientRect();
-      const contentBottom = r.bottom - (parseFloat(getComputedStyle(exp).paddingBottom) || 0);
-      const titleBottom = exp.querySelector(':scope > h3')?.getBoundingClientRect().bottom ?? r.top;
-      // Take over once the section title scrolls away; stay until the bar has slid fully off
-      if (titleBottom <= stickyTop && contentBottom + barH > stickyTop) {
+      const firstEntryTop = exp.querySelector(':scope > .group')?.getBoundingClientRect().top ?? Infinity;
+      // Appear once the first role reaches the bar; stay until the bar has slid fully off
+      if (firstEntryTop <= stickyTop + 0.5 && r.bottom + barH > stickyTop) {
         exp.querySelectorAll(':scope > .group').forEach((entry) => {
           if (entry.getBoundingClientRect().top <= stickyTop + barH + 8 || !company) {
             company = entry.querySelector('h3')?.textContent?.trim() ?? null;
@@ -118,6 +143,14 @@ export default function Portfolio() {
     setStuckExperience(prev => (prev === company ? prev : company));
   };
   const [stuckExperience, setStuckExperience] = useState<string | null>(null);
+  const [stuckSection, setStuckSection] = useState<string | null>(null);
+  // Pinned section title gets a divider only when no dropdown header is pinned beneath it
+  const titleBorder = (id: string) => {
+    const subPinned = id === 'experience' ? !!stuckExperience
+      : id === 'extracurriculars' ? !!stuckGroup?.startsWith('ec-')
+      : id === 'projects' ? !!stuckGroup?.startsWith('proj-') : false;
+    return stuckSection === id && !subPinned ? 'border-th-line' : 'border-transparent';
+  };
 
   // ── Seamless auto open/close ──
   // Only groups that are off-screen change, they change instantly (no animation), and the
@@ -130,14 +163,19 @@ export default function Portfolio() {
   useLayoutEffect(() => { openStateRef.current = { ec: openExtracurriculars, proj: openProjectYears }; });
 
   const findAnchor = () => {
-    const mid = window.innerHeight / 2;
+    // Visible area starts below the pinned section title + dropdown header
+    const subHeader = document.querySelector('[id^="proj-"] > button') as HTMLElement | null;
+    const visibleTop = subHeader ? (parseFloat(getComputedStyle(subHeader).top) || 0) + subHeader.offsetHeight : 0;
     let best: Element | null = null;
     let bestDist = Infinity;
     document.querySelectorAll(ANCHOR_SELECTOR).forEach((el) => {
       if (el.closest('.grid-rows-\\[0fr\\]')) return; // inside a collapsed group
       const r = el.getBoundingClientRect();
       if (r.height === 0) return;
-      const dist = Math.abs(r.top - mid);
+      // Use the topmost thing visible below the pinned headers: changes above it are compensated,
+      // and anything opening further down sits under it, so what you see never moves
+      const onScreen = r.top >= visibleTop && r.top <= window.innerHeight;
+      const dist = onScreen ? r.top : 100000 + Math.abs(r.top);
       if (dist < bestDist) { best = el; bestDist = dist; }
     });
     return best as Element | null;
@@ -337,13 +375,12 @@ export default function Portfolio() {
     setMobileMenuOpen(false);
     setMobileExpandedNav(null);
 
-    // Open the corresponding dropdown if navigating to a sub-group
-    if (id.startsWith('ec-')) {
-      const key = id.replace('ec-', '');
-      setOpenExtracurriculars(prev => ({ ...prev, [key]: true }));
-    } else if (id.startsWith('proj-')) {
-      const year = id.replace('proj-', '');
-      setOpenProjectYears(prev => ({ ...prev, [year]: true }));
+    // Open the dropdown being navigated to (or a section's first dropdown) before measuring
+    const target = AUTO_GROUPS.find(g => g.id === id)
+      ?? AUTO_GROUPS.find(g => document.getElementById(id)?.querySelector(`#${g.id}`));
+    if (target) {
+      if (target.kind === 'ec') setOpenExtracurriculars(prev => ({ ...prev, [target.key]: true }));
+      else setOpenProjectYears(prev => ({ ...prev, [target.key]: true }));
     }
 
     // Pause the auto-accordion while we animate to the target
@@ -353,8 +390,8 @@ export default function Portfolio() {
     setTimeout(() => {
       const el = document.getElementById(id);
       if (!el) { programmaticScrollRef.current = false; return; }
-      animateScroll(el.getBoundingClientRect().top + window.scrollY - 96);
-    }, id.startsWith('ec-') || id.startsWith('proj-') ? 50 : 0);
+      animateScroll(pinLandingY(el));
+    }, target ? 50 : 0);
   };
 
   return (
@@ -605,9 +642,9 @@ export default function Portfolio() {
               </div>
             </div>
 
-            <section id="skills" className="scroll-mt-16 lg:scroll-mt-24 text-th-prose leading-relaxed">
-              <h3 className="text-lg font-bold uppercase tracking-widest text-th-heading mb-6">Skills</h3>
-              <div className="space-y-4">
+            <section id="skills" className="scroll-mt-16 lg:scroll-mt-24 text-th-prose leading-relaxed mb-0!">
+              <h3 className={`sticky top-[53px] lg:top-0 z-30 -mx-1 px-1 h-12 -mt-2.5 flex items-center bg-th-bg border-b text-lg font-bold uppercase tracking-widest text-th-heading mb-0! ${titleBorder('skills')}`}>Skills</h3>
+              <div className="space-y-4 mt-3.5">
                 {[
                   { category: "Languages", skills: ["Python", "C++", "JavaScript", "TypeScript", "SQL", "Verilog", "HTML", "CSS"] },
                   { category: "Web & Frameworks", skills: ["React", "React Native", "Next.js", "Node.js", "Express", "FastAPI", "Flask", "GraphQL"] },
@@ -624,22 +661,20 @@ export default function Portfolio() {
                   </div>
                 ))}
               </div>
+              <div aria-hidden="true" className="pt-12 sm:pt-16 pb-12 sm:pb-16"><hr className="border-th-line" /></div>
             </section>
 
-            <hr className="border-th-line" />
-
-            <section id="experience" className="scroll-mt-16 lg:scroll-mt-24 space-y-8 mb-0! pb-12 sm:pb-16">
-              <h3 className="text-lg font-bold uppercase tracking-widest text-th-heading">Work Experience</h3>
+            <section id="experience" className="scroll-mt-16 lg:scroll-mt-24 space-y-8 mb-0!">
+              <h3 className={`sticky top-[53px] lg:top-0 z-30 -mx-1 px-1 h-12 -mt-2.5 flex items-center bg-th-bg border-b text-lg font-bold uppercase tracking-widest text-th-heading mb-0! ${titleBorder('experience')}`}>Work Experience</h3>
               {/* Pinned bar (zero-height so it doesn't affect layout), matching the dropdown headers */}
-              <div id="experience-bar" className="sticky top-[53px] lg:top-0 z-20 h-0 mb-0!" aria-hidden={!stuckExperience}>
+              <div id="experience-bar" className="sticky top-[101px] lg:top-12 z-20 h-0 mb-0!" aria-hidden={!stuckExperience}>
                 <div className={`-mx-1 flex items-center gap-2 px-1 py-2 bg-th-bg border-b border-th-line ${stuckExperience ? '' : 'invisible'}`}>
                   <span className="h-1.5 w-1.5 mx-[5px] shrink-0 rounded-full bg-th-accent"></span>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub truncate">{stuckExperience}</h4>
-                  <span className="ml-auto pl-3 shrink-0 text-xs font-semibold uppercase tracking-wider text-th-muted">Work Experience</span>
                 </div>
               </div>
 
-              <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
+              <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4 mt-[22px]">
                 <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2 flex md:block">Fall 2026<span className="hidden md:block"></span><span className="ml-auto md:ml-0"> Sep - Dec</span></header>
                 <div className="z-10 md:col-span-6">
                   <h3 className="font-medium leading-snug text-th-heading">BrainRidge Consulting Inc.</h3>
@@ -710,19 +745,17 @@ export default function Portfolio() {
                   </ul>
                 </div>
               </div>
+              <div aria-hidden="true" className="pt-4 sm:pt-8 pb-12 sm:pb-16"><hr className="border-th-line" /></div>
             </section>
 
-            <hr className="border-th-line" />
-
             <section id="extracurriculars" className="scroll-mt-16 lg:scroll-mt-24 space-y-8 mb-0!">
-              <h3 className="text-lg font-bold uppercase tracking-widest text-th-heading">Extracurriculars</h3>
+              <h3 className={`sticky top-[53px] lg:top-0 z-30 -mx-1 px-1 h-12 -mt-2.5 flex items-center bg-th-bg border-b text-lg font-bold uppercase tracking-widest text-th-heading mb-0! ${titleBorder('extracurriculars')}`}>Extracurriculars</h3>
 
               {/* University */}
-              <div id="ec-university" className="mb-0!">
-                <button onClick={() => toggleExtracurricular('university')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'ec-university' ? 'border-th-line' : 'border-transparent'}`}>
+              <div id="ec-university" className="mb-0! mt-[22px]">
+                <button onClick={() => toggleExtracurricular('university')} className={`sticky top-[101px] lg:top-12 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'ec-university' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openExtracurriculars.university ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">University</h4>
-                  <span className={`ml-auto pl-3 text-xs font-semibold uppercase tracking-wider text-th-muted transition-opacity duration-150 ${stuckGroup === 'ec-university' ? 'opacity-100' : 'opacity-0'}`} aria-hidden={stuckGroup !== 'ec-university'}>Extracurriculars</span>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('ec-university')} ${openExtracurriculars.university ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('ec-university')} ${openExtracurriculars.university ? 'opacity-100' : 'opacity-0'}`}>
@@ -754,11 +787,10 @@ export default function Portfolio() {
               </div>
 
               {/* High School */}
-              <div id="ec-highschool">
-                <button onClick={() => toggleExtracurricular('highschool')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'ec-highschool' ? 'border-th-line' : 'border-transparent'}`}>
+              <div id="ec-highschool" className="mb-0!">
+                <button onClick={() => toggleExtracurricular('highschool')} className={`sticky top-[101px] lg:top-12 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'ec-highschool' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openExtracurriculars.highschool ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">High School</h4>
-                  <span className={`ml-auto pl-3 text-xs font-semibold uppercase tracking-wider text-th-muted transition-opacity duration-150 ${stuckGroup === 'ec-highschool' ? 'opacity-100' : 'opacity-0'}`} aria-hidden={stuckGroup !== 'ec-highschool'}>Extracurriculars</span>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('ec-highschool')} ${openExtracurriculars.highschool ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('ec-highschool')} ${openExtracurriculars.highschool ? 'opacity-100' : 'opacity-0'}`}>
@@ -901,19 +933,17 @@ export default function Portfolio() {
                   </div>
                 </div>
               </div>
+              <div aria-hidden="true" className="pb-12 sm:pb-16"><hr className="border-th-line" /></div>
             </section>
 
-            <hr className="border-th-line" />
-
             <section id="projects" className="scroll-mt-16 lg:scroll-mt-24 space-y-8">
-              <h3 className="text-lg font-bold uppercase tracking-widest text-th-heading">Projects</h3>
+              <h3 className={`sticky top-[53px] lg:top-0 z-30 -mx-1 px-1 h-12 -mt-2.5 flex items-center bg-th-bg border-b text-lg font-bold uppercase tracking-widest text-th-heading mb-0! ${titleBorder('projects')}`}>Projects</h3>
 
               {/* 2026 */}
-              <div id="proj-2026" className="mb-0!">
-                <button onClick={() => toggleProjectYear('2026')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2026' ? 'border-th-line' : 'border-transparent'}`}>
+              <div id="proj-2026" className="mb-0! mt-[22px]">
+                <button onClick={() => toggleProjectYear('2026')} className={`sticky top-[101px] lg:top-12 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2026' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2026'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2026</h4>
-                  <span className={`ml-auto pl-3 text-xs font-semibold uppercase tracking-wider text-th-muted transition-opacity duration-150 ${stuckGroup === 'proj-2026' ? 'opacity-100' : 'opacity-0'}`} aria-hidden={stuckGroup !== 'proj-2026'}>Projects</span>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2026')} ${openProjectYears['2026'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2026')} ${openProjectYears['2026'] ? 'opacity-100' : 'opacity-0'}`}>
@@ -1016,10 +1046,9 @@ export default function Portfolio() {
 
               {/* 2025 */}
               <div id="proj-2025" className="mb-0!">
-                <button onClick={() => toggleProjectYear('2025')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2025' ? 'border-th-line' : 'border-transparent'}`}>
+                <button onClick={() => toggleProjectYear('2025')} className={`sticky top-[101px] lg:top-12 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2025' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2025'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2025</h4>
-                  <span className={`ml-auto pl-3 text-xs font-semibold uppercase tracking-wider text-th-muted transition-opacity duration-150 ${stuckGroup === 'proj-2025' ? 'opacity-100' : 'opacity-0'}`} aria-hidden={stuckGroup !== 'proj-2025'}>Projects</span>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2025')} ${openProjectYears['2025'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2025')} ${openProjectYears['2025'] ? 'opacity-100' : 'opacity-0'}`}>
@@ -1070,10 +1099,9 @@ export default function Portfolio() {
 
               {/* 2024 */}
               <div id="proj-2024" className="mb-0!">
-                <button onClick={() => toggleProjectYear('2024')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2024' ? 'border-th-line' : 'border-transparent'}`}>
+                <button onClick={() => toggleProjectYear('2024')} className={`sticky top-[101px] lg:top-12 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2024' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2024'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2024</h4>
-                  <span className={`ml-auto pl-3 text-xs font-semibold uppercase tracking-wider text-th-muted transition-opacity duration-150 ${stuckGroup === 'proj-2024' ? 'opacity-100' : 'opacity-0'}`} aria-hidden={stuckGroup !== 'proj-2024'}>Projects</span>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2024')} ${openProjectYears['2024'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2024')} ${openProjectYears['2024'] ? 'opacity-100' : 'opacity-0'}`}>
@@ -1145,10 +1173,9 @@ export default function Portfolio() {
 
               {/* 2023 */}
               <div id="proj-2023" className="mb-0!">
-                <button onClick={() => toggleProjectYear('2023')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2023' ? 'border-th-line' : 'border-transparent'}`}>
+                <button onClick={() => toggleProjectYear('2023')} className={`sticky top-[101px] lg:top-12 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2023' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2023'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2023</h4>
-                  <span className={`ml-auto pl-3 text-xs font-semibold uppercase tracking-wider text-th-muted transition-opacity duration-150 ${stuckGroup === 'proj-2023' ? 'opacity-100' : 'opacity-0'}`} aria-hidden={stuckGroup !== 'proj-2023'}>Projects</span>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2023')} ${openProjectYears['2023'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2023')} ${openProjectYears['2023'] ? 'opacity-100' : 'opacity-0'}`}>
@@ -1229,10 +1256,9 @@ export default function Portfolio() {
 
               {/* 2022 */}
               <div id="proj-2022">
-                <button onClick={() => toggleProjectYear('2022')} className={`sticky top-[53px] lg:top-0 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2022' ? 'border-th-line' : 'border-transparent'}`}>
+                <button onClick={() => toggleProjectYear('2022')} className={`sticky top-[101px] lg:top-12 z-20 -mx-1 flex items-center gap-2 w-[calc(100%+0.5rem)] px-1 py-2 text-left group bg-th-bg border-b transition-colors ${stuckGroup === 'proj-2022' ? 'border-th-line' : 'border-transparent'}`}>
                   <svg className={`h-4 w-4 text-th-accent transition-transform duration-500 ease-out-expo ${openProjectYears['2022'] ? 'rotate-90' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
                   <h4 className="text-sm font-semibold uppercase tracking-wider text-th-sub group-hover:text-th-heading transition-colors">2022</h4>
-                  <span className={`ml-auto pl-3 text-xs font-semibold uppercase tracking-wider text-th-muted transition-opacity duration-150 ${stuckGroup === 'proj-2022' ? 'opacity-100' : 'opacity-0'}`} aria-hidden={stuckGroup !== 'proj-2022'}>Projects</span>
                 </button>
                 <div className={`grid transition-[grid-template-rows] duration-500 ease-out-expo ${noAnim('proj-2022')} ${openProjectYears['2022'] ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2022')} ${openProjectYears['2022'] ? 'opacity-100' : 'opacity-0'}`}>
