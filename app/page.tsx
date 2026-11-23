@@ -968,10 +968,11 @@ export default function Portfolio() {
                       <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Apr 2026 —<span className="hidden md:block"></span> Present</header>
                       <div className="z-10 md:col-span-6">
                         <h3 className="font-medium leading-snug text-th-heading group-hover:text-th-accent transition-colors">Hase</h3>
-                        <p className="mt-2 text-sm leading-normal text-th-prose">A financial tracking client for aggregating and visualizing daily spend streams on mobile.</p>
+                        <p className="mt-2 text-sm leading-normal text-th-prose">A personal finance app for iPhone, Android and Mac that tracks spending, income, budgets and card perks across accounts and currencies.</p>
                         <ul className="mt-2 space-y-1.5 text-sm leading-normal text-th-prose">
-                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Architecting a highly concurrent client that aggregates and logs daily income/expense streams with real-time dynamic visualization.</span></li>
-                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Engineered a centralized relational schema to securely parse, store, and retrieve digital wallet identifiers and loyalty point metrics across mobile ecosystems.</span></li>
+                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Built offline-first clients on a local SQLite database that sync across devices through a Go and PostgreSQL API.</span></li>
+                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Turned PDF, CSV and OFX statements, forwarded emails and bank alerts into transactions, with multi-currency totals at daily exchange rates.</span></li>
+                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Migrating the React Native app to native SwiftUI and Jetpack Compose on a shared Kotlin Multiplatform core.</span></li>
                         </ul>
                         <div className="mt-3 flex items-center gap-3">
                           <a href="https://hase.bellakdev.com/" target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-th-accent hover:text-th-heading transition flex items-center gap-1">
@@ -982,7 +983,11 @@ export default function Portfolio() {
                         <ul className="mt-2 flex flex-wrap text-xs font-medium text-th-sub">
                           <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">TypeScript</div></li>
                           <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">React Native</div></li>
-                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">SQL</div></li>
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">Go</div></li>
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">PostgreSQL</div></li>
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">SQLite</div></li>
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">Swift</div></li>
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">Kotlin</div></li>
                         </ul>
                       </div>
                     </div>
