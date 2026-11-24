@@ -949,6 +949,31 @@ export default function Portfolio() {
                   <div className={`overflow-hidden transition-opacity duration-500 ease-out-expo ${noAnim('proj-2026')} ${openProjectYears['2026'] ? 'opacity-100' : 'opacity-0'}`}>
                   <div className="mt-4 space-y-8 ml-3 sm:mt-6 sm:space-y-12 sm:ml-6 pb-8">
                     <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
+                      <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Nov 2026 —<span className="hidden md:block"></span> Present</header>
+                      <div className="z-10 md:col-span-6">
+                        <h3 className="font-medium leading-snug text-th-heading group-hover:text-th-accent transition-colors">Pixella</h3>
+                        <p className="mt-2 text-sm leading-normal text-th-prose">A native iOS photo and video editor with AI-style retouching, background removal, filters, captions and collage, all running on-device.</p>
+                        <ul className="mt-2 space-y-1.5 text-sm leading-normal text-th-prose">
+                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Built a non-destructive Core Image pipeline with undo/redo, 22 filters, 16 effects and 15 adjustments, previewed live and re-rendered at full resolution on export.</span></li>
+                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Used Vision face landmarks and subject segmentation for beauty retouching and one-tap background removal, with no server.</span></li>
+                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Added an AVFoundation video editor that applies the same filters per frame, with trim, speed, captions and background music.</span></li>
+                        </ul>
+                        <div className="mt-3 flex items-center gap-3">
+                          <a href="/pixella" className="text-xs font-medium text-th-accent hover:text-th-heading transition flex items-center gap-1">
+                            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            Details
+                          </a>
+                        </div>
+                        <ul className="mt-2 flex flex-wrap text-xs font-medium text-th-sub">
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">Swift</div></li>
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">SwiftUI</div></li>
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">Core Image</div></li>
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">Vision</div></li>
+                          <li className="mr-1.5 mt-2"><div className="flex items-center rounded-full bg-th-tag px-3 py-1 leading-5">AVFoundation</div></li>
+                        </ul>
+                      </div>
+                    </div>
+                    <div className="group relative grid pb-1 transition-all md:grid-cols-8 md:gap-4">
                       <header className="z-10 mb-2 mt-1 text-xs font-semibold uppercase tracking-wide text-th-accent md:col-span-2">Apr 2026 —<span className="hidden md:block"></span> Present</header>
                       <div className="z-10 md:col-span-6">
                         <h3 className="font-medium leading-snug text-th-heading group-hover:text-th-accent transition-colors">Booke</h3>
