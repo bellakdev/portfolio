@@ -7,9 +7,10 @@ export const metadata: Metadata = {
 
 const features = [
   ["AI Studio", "One-tap enhance, 2× HD upscale, auto beauty, subject cutout, portrait blur and seven art styles."],
-  ["Beauty", "Smooth skin, glow, slim face, bigger eyes, whiter teeth, blush and lip colour — faces are found automatically."],
+  ["Beauty", "Smooth skin, glow, slim face, bigger eyes, eye bags, nose and chin, whiter teeth, blush and lip colour — faces are found automatically."],
+  ["Retouch", "Tap to heal blemishes, slim or enlarge any area, and look taller with one slider."],
   ["Background", "Remove the background for a transparent PNG, or replace it with blur, a colour or a gradient."],
-  ["Edit", "Crop and rotate, 15 adjustments, 22 filters and 16 effects including glitch, VHS, light leak and bokeh."],
+  ["Edit", "Crop and rotate, 15 adjustments, a per-colour HSL mixer, 22 filters and 38 effects including sparkle, tilt-shift, snow, old film and HDR — all previewed live as you drag."],
   ["Create", "Text with outlines and labels, emoji stickers and shapes, neon and marker brushes, mosaic and blur brushes, frames."],
   ["Video", "Trim, change speed from 0.25× to 4×, apply filters and effects, add captions, stickers and background music."],
   ["Collage", "Combine 2–9 photos with adjustable layouts, spacing, corners and background colour."],

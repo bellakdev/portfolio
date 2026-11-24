@@ -954,7 +954,7 @@ export default function Portfolio() {
                         <h3 className="font-medium leading-snug text-th-heading group-hover:text-th-accent transition-colors">Pixella</h3>
                         <p className="mt-2 text-sm leading-normal text-th-prose">A native iOS photo and video editor with AI-style retouching, background removal, filters, captions and collage, all running on-device.</p>
                         <ul className="mt-2 space-y-1.5 text-sm leading-normal text-th-prose">
-                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Built a non-destructive Core Image pipeline with undo/redo, 22 filters, 16 effects and 15 adjustments, previewed live and re-rendered at full resolution on export.</span></li>
+                          <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Built a non-destructive Core Image pipeline rendered to Metal every frame, with 22 filters, 38 effects, an HSL mixer and undo/redo, re-rendered at full resolution on export.</span></li>
                           <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Used Vision face landmarks and subject segmentation for beauty retouching and one-tap background removal, with no server.</span></li>
                           <li className="flex gap-2.5"><span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-th-accent"></span><span>Added an AVFoundation video editor that applies the same filters per frame, with trim, speed, captions and background music.</span></li>
                         </ul>
