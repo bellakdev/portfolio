@@ -1,0 +1,63 @@
+/* Pixella pages: the app's palette (ink on cream, coral accent) and IBM Plex, matching bellakdev.com/hase.
+   Scoped to .px so nothing leaks into the portfolio. IBM Plex: SIL Open Font License (/pixella/fonts/LICENSE.txt). */
+@font-face { font-family: "Plex"; src: url("/pixella/fonts/IBMPlexSans.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Plex"; src: url("/pixella/fonts/IBMPlexSans-Medm.ttf") format("truetype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Plex"; src: url("/pixella/fonts/IBMPlexSans-SmBld.ttf") format("truetype"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Plex"; src: url("/pixella/fonts/IBMPlexSans-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+
+.px {
+  --bg: #f3f0ea; --card: #ffffff; --text: #1d1c19; --muted: #6b665c; --rule: #ddd7cc;
+  --accent: #c2412b;       /* the icon's coral, darkened for text contrast on cream */
+  --button: #1d1c19; --button-text: #f3f0ea;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.6 "Plex", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+@media (prefers-color-scheme: dark) {
+  .px { --bg: #161513; --card: #23211d; --text: #f3f0ea; --muted: #a39e93; --rule: #3a3731; --accent: #f06a55; --button: #f3f0ea; --button-text: #161513; }
+}
+/* The portfolio hides the pointer for its own drawn cursor, which only exists on the home page. */
+.px, .px * { cursor: auto !important; }
+.px a, .px a *, .px button { cursor: pointer !important; }
+
+.px main { max-width: 720px; margin: 0 auto; padding: 56px 20px 80px; }
+.px a { color: var(--accent); text-decoration: none; }
+.px a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.px p, .px li { margin: 0 0 12px; }
+.px ul, .px ol { padding-left: 22px; }
+.px h1 { font-size: 34px; font-weight: 700; line-height: 1.2; letter-spacing: -0.01em; margin: 32px 0 12px; }
+.px h2 { font-size: 20px; font-weight: 600; margin: 36px 0 8px; }
+.px h3 { font-size: 17px; font-weight: 600; margin: 0 0 4px; }
+.px .muted { color: var(--muted); font-size: 15px; }
+
+/* Icon and wordmark at the top of inner pages. */
+.px .brand { display: inline-flex; align-items: center; gap: 12px; color: var(--text); font-weight: 700; font-size: 28px; letter-spacing: -0.03em; line-height: 1; }
+.px .brand:hover { text-decoration: none; }
+.px .brand img { width: 44px; height: 44px; border-radius: 10px; box-shadow: 0 0 0 1px var(--rule); }
+
+/* Product page. */
+.px .hero { margin: 48px 0 8px; }
+.px .hero img { width: 112px; height: 112px; border-radius: 25px; box-shadow: 0 0 0 1px var(--rule), 0 10px 30px rgba(29, 28, 25, 0.10); }
+.px .hero h1 { font-size: 64px; letter-spacing: -0.04em; line-height: 1; margin: 28px 0 12px; }
+.px .lead { font-size: 22px; line-height: 1.45; margin: 0 0 20px; }
+.px .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; padding: 0; margin: 28px 0 8px; list-style: none; }
+.px .features li { background: var(--card); border-radius: 16px; padding: 18px 20px; margin: 0; }
+.px .features p { color: var(--muted); font-size: 15px; line-height: 1.5; margin: 0; }
+.px .card { background: var(--card); border-radius: 16px; padding: 20px 22px; margin: 16px 0; }
+.px .card h2 { margin-top: 0; }
+.px .button { display: inline-block; background: var(--button); color: var(--button-text); font-weight: 600; padding: 12px 22px; border-radius: 12px; margin: 8px 0 4px; }
+.px .button:hover { text-decoration: none; opacity: 0.9; }
+.px nav { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 15px; font-weight: 500; }
+.px dl { margin: 0; }
+.px dt { font-weight: 600; margin-top: 20px; }
+.px dd { margin: 4px 0 0; color: var(--muted); }
+
+@media (max-width: 480px) {
+  .px main { padding-top: 32px; }
+  .px .hero { margin-top: 24px; }
+  .px .hero img { width: 88px; height: 88px; border-radius: 20px; }
+  .px .hero h1 { font-size: 48px; }
+  .px .lead { font-size: 19px; }
+}

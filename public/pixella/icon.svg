@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- Pixella app icon: two stacked photos. Tools/Brand/gen-icon.sh renders the App Store PNG from this file. -->
+  <defs><clipPath id="win"><rect x="234" y="400" width="484" height="336" rx="34"/></clipPath></defs>
+  <rect width="1024" height="1024" rx="228" fill="#F3F0EA"/>
+  <rect x="322" y="236" width="532" height="420" rx="72" fill="#E5533D"/>
+  <rect x="186" y="352" width="580" height="432" rx="80" fill="#1D1C19" stroke="#F3F0EA" stroke-width="26" paint-order="stroke"/>
+  <g clip-path="url(#win)">
+    <rect x="234" y="400" width="484" height="336" fill="#1D1C19"/>
+    <path d="M200 760 L200 690 L392 540 L478 610 L580 520 L760 680 L760 760 Z" fill="#F3F0EA" stroke="#F3F0EA" stroke-width="16" stroke-linejoin="round"/>
+  </g>
+  <circle cx="634" cy="478" r="40" fill="#E5533D"/>
+</svg>

@@ -1,63 +1,52 @@
+/* eslint-disable @next/next/no-img-element */
 import type { Metadata } from "next";
+import { Footer } from "./Brand";
 
 export const metadata: Metadata = {
-  title: "Pixella — Photo & Video Editor",
-  description: "Pixella is an on-device photo and video editor for iPhone: AI enhance, beauty retouch, background removal, filters, effects, text, stickers, collage and video editing.",
+  title: "Pixella",
+  description: "Pixella: a photo and video editor for iPhone. Natural beauty retouching, makeup, reshaping, filters and effects, all on your phone.",
 };
 
-const features = [
-  ["AI Studio", "One-tap enhance, 2× HD upscale, auto beauty, subject cutout, portrait blur and seven art styles."],
-  ["Beauty", "Smooth skin, glow, slim face, bigger eyes, eye bags, nose and chin, whiter teeth, blush and lip colour — faces are found automatically."],
-  ["Retouch", "Tap to heal blemishes, slim or enlarge any area, and look taller with one slider."],
-  ["Background", "Remove the background for a transparent PNG, or replace it with blur, a colour or a gradient."],
-  ["Edit", "Crop and rotate, 15 adjustments, a per-colour HSL mixer, 22 filters and 38 effects including sparkle, tilt-shift, snow, old film and HDR — all previewed live as you drag."],
-  ["Create", "Text with outlines and labels, emoji stickers and shapes, neon and marker brushes, mosaic and blur brushes, frames."],
-  ["Video", "Trim, change speed from 0.25× to 4×, apply filters and effects, add captions, stickers and background music."],
-  ["Collage", "Combine 2–9 photos with adjustable layouts, spacing, corners and background colour."],
+const features: [string, string][] = [
+  ["Beauty that looks real", "Smooth skin without the plastic look. Lipstick, blush, brows, liner and lashes follow your face's own light, shade and texture, in shades for every skin tone."],
+  ["Reshape any feature", "Slim the face or jaw, resize and tilt the eyes, nose, brows and lips. Each change stays where you put it, and Fix BG keeps the background straight."],
+  ["Retouch with a finger", "Heal blemishes, push, slim or enlarge any area with the warp brush, and look taller with one slider."],
+  ["Cut out the background", "Remove it for a transparent PNG, or swap it for a blur, a colour or a gradient."],
+  ["Filters and effects", "22 filters and 38 effects, from film grain and VHS to snow, glitch and tilt-shift, previewed live as you drag."],
+  ["Fine control", "15 adjustments, a per-colour HSL mixer, and crop, rotate and straighten."],
+  ["Text, stickers and drawing", "Fonts with outlines and labels, emoji stickers, neon and marker brushes, mosaic and blur brushes, and frames."],
+  ["Video and collage", "Trim, change speed from 0.25× to 4×, and add filters, captions and music. Put up to nine photos in one collage."],
 ];
 
 export default function PixellaPage() {
   return (
-    <main className="min-h-screen bg-th-bg text-th-body">
-      <div className="mx-auto max-w-2xl px-6 py-16 sm:py-24">
-        <a href="/" className="text-sm font-medium text-th-accent hover:text-th-heading transition">← Bella Kim</a>
-
-        <div className="mt-10 flex items-center gap-5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/pixella/icon.png" alt="Pixella app icon" width={88} height={88} className="rounded-[22px] shadow-sm" />
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-th-heading">Pixella</h1>
-            <p className="mt-1 text-th-prose">Photo &amp; video editor for iPhone</p>
-          </div>
-        </div>
-
-        <p className="mt-8 leading-relaxed text-th-prose">
-          Pixella is a SwiftUI photo and video editor. Every edit — including face retouching and background removal — runs
-          on your iPhone with Core Image, Vision and AVFoundation. There is no account, no server and no tracking.
+    <main>
+      <section className="hero">
+        <img src="/pixella/icon.svg" alt="" />
+        <h1>pixella</h1>
+        <p className="lead">Edit photos and videos, beautifully and privately.</p>
+        <p>
+          Pixella is a photo and video editor for iPhone. Retouch faces, try on makeup, reshape, remove backgrounds,
+          and add filters, text and music. Every edit happens on your phone: no account, no uploads, no tracking.
         </p>
+      </section>
 
-        <h2 className="mt-12 text-sm font-semibold uppercase tracking-widest text-th-heading">Features</h2>
-        <ul className="mt-4 space-y-4">
-          {features.map(([title, body]) => (
-            <li key={title} className="flex gap-3">
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-th-accent" />
-              <p className="text-sm leading-relaxed text-th-prose"><span className="font-medium text-th-heading">{title}.</span> {body}</p>
-            </li>
-          ))}
-        </ul>
+      <ul className="features">
+        {features.map(([title, body]) => (
+          <li key={title}>
+            <h3>{title}</h3>
+            <p>{body}</p>
+          </li>
+        ))}
+      </ul>
 
-        <h2 id="support" className="mt-12 text-sm font-semibold uppercase tracking-widest text-th-heading">Support</h2>
-        <div className="mt-4 space-y-3 text-sm leading-relaxed text-th-prose">
-          <p>Questions, bug reports or feature requests? Email <a className="text-th-accent hover:text-th-heading" href="mailto:b37kim@uwaterloo.ca?subject=Pixella%20support">b37kim@uwaterloo.ca</a> and include your iPhone model and iOS version.</p>
-          <p><span className="font-medium text-th-heading">Saving fails?</span> Allow Pixella to add photos in Settings → Privacy &amp; Security → Photos → Pixella.</p>
-          <p><span className="font-medium text-th-heading">Beauty tools do nothing?</span> They need a clearly visible face; the panel shows how many faces were found.</p>
-          <p><span className="font-medium text-th-heading">Background removal can&apos;t find a subject?</span> Try a photo where the person, pet or object stands out from the background.</p>
-        </div>
-
-        <p className="mt-12 text-sm text-th-prose">
-          <a className="text-th-accent hover:text-th-heading" href="/pixella/privacy">Privacy policy</a>
-        </p>
+      <div className="card">
+        <h2>Pixella for iPhone</h2>
+        <p>Coming soon to the App Store.</p>
+        <p className="muted">Requires iOS 17 or later.</p>
       </div>
+
+      <Footer />
     </main>
   );
 }
