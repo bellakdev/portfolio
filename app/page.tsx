@@ -500,7 +500,7 @@ export default function Portfolio() {
                 Bella Kim
               </h1>
               <h2 className="mt-3 text-lg font-medium tracking-tight text-th-sub sm:text-xl">
-                Computer Engineering @ University of Waterloo
+                Computer Engineering <span className="inline-block">@ University of Waterloo</span>
               </h2>
               <div className="mt-8 flex items-center gap-4">
                 <a href="mailto:b37kim@uwaterloo.ca" className="text-th-accent hover:text-th-heading transition">
@@ -615,7 +615,7 @@ export default function Portfolio() {
             {/* Mobile Hero */}
             <div className="lg:hidden">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-th-heading">Bella Kim</h1>
-              <h2 className="mt-1 text-sm sm:text-base font-medium tracking-tight text-th-sub">Computer Engineering @ University of Waterloo</h2>
+              <h2 className="mt-1 text-sm sm:text-base font-medium tracking-tight text-th-sub">Computer Engineering <span className="inline-block">@ University of Waterloo</span></h2>
               <div className="mt-6 flex items-center justify-between rounded-full bg-th-tag p-1">
                 <button
                   onClick={() => changeTheme(theme === 'light' ? 'dark' : 'light')}
